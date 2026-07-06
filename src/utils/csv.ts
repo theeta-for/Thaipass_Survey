@@ -1,5 +1,6 @@
 import { surveyQuestions } from "../data/surveyQuestions";
 import type { SurveyResponse } from "../types";
+import { formatDate, formatTime } from "./results";
 
 function escapeCsv(value: unknown) {
   const text = String(value ?? "");
@@ -22,10 +23,12 @@ function answerToCsvValue(response: SurveyResponse, questionId: string) {
   return answer ?? "";
 }
 
-export function downloadResponsesCsv(responses: SurveyResponse[]) {
+export function exportToCSV(responses: SurveyResponse[]) {
   const headers = [
     "Response ID",
     "Timestamp",
+    "Date",
+    "Time",
     ...surveyQuestions.map((question) => question.title),
     "Other responses",
   ];
@@ -33,6 +36,8 @@ export function downloadResponsesCsv(responses: SurveyResponse[]) {
   const rows = responses.map((response) => [
     response.id,
     response.timestamp,
+    formatDate(response.timestamp),
+    formatTime(response.timestamp),
     ...surveyQuestions.map((question) => answerToCsvValue(response, question.id)),
     Object.entries(response.otherAnswers)
       .map(([questionId, text]) => {
@@ -54,3 +59,5 @@ export function downloadResponsesCsv(responses: SurveyResponse[]) {
   link.click();
   URL.revokeObjectURL(url);
 }
+
+export const downloadResponsesCsv = exportToCSV;

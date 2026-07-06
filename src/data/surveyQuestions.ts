@@ -153,6 +153,18 @@ export const surveyQuestions: Question[] = [
     ],
   },
   {
+    id: "travelComparison",
+    type: "single",
+    title: "Compared to how you currently prepare for travel, how does ThaiPass feel?",
+    options: [
+      "Much better",
+      "Somewhat better",
+      "About the same",
+      "Worse",
+      "I’m not sure",
+    ],
+  },
+  {
     id: "downloadReason",
     type: "single",
     title: "What is the main reason you would or would not download ThaiPass?",

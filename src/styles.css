@@ -162,7 +162,9 @@ main {
 .responses-section,
 .thank-you-card,
 .empty-state,
-.metric-card {
+.metric-card,
+.password-card,
+.dashboard-header-card {
   border: 1px solid var(--line);
   border-radius: 18px;
   background: var(--white);
@@ -551,6 +553,35 @@ main {
   margin-bottom: 18px;
 }
 
+.overview-grid {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.dashboard-header-card {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  max-width: 1120px;
+  margin: 0 auto 18px;
+  padding: 20px 22px;
+  background: var(--soft);
+}
+
+.dashboard-header-card div {
+  display: grid;
+  gap: 6px;
+}
+
+.dashboard-header-card span,
+.password-form span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.dashboard-header-card strong {
+  font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
 .metric-card {
   padding: 22px;
 }
@@ -563,8 +594,51 @@ main {
 .metric-card strong {
   display: block;
   margin-top: 8px;
-  font-size: clamp(1.8rem, 5vw, 3rem);
-  line-height: 1;
+  font-size: clamp(1.45rem, 4vw, 2.35rem);
+  line-height: 1.08;
+}
+
+.metric-card p {
+  font-size: 0.92rem;
+}
+
+.password-card {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: clamp(22px, 5vw, 36px);
+}
+
+.password-card h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.password-card > p {
+  margin: 8px 0 22px;
+  color: var(--muted);
+}
+
+.password-form {
+  display: grid;
+  gap: 14px;
+}
+
+.password-form label {
+  display: grid;
+  gap: 8px;
+}
+
+.password-form input {
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0 14px;
+  background: var(--soft);
+}
+
+.password-form input:focus {
+  border-color: var(--thai-red);
+  outline: 3px solid rgba(215, 25, 32, 0.12);
 }
 
 .results-grid {
@@ -593,6 +667,30 @@ main {
 .rating-summary {
   display: grid;
   gap: 12px;
+}
+
+.sentiment-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.sentiment-summary div {
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--soft);
+}
+
+.sentiment-summary span,
+.sentiment-summary small {
+  color: var(--muted);
+}
+
+.sentiment-summary strong {
+  font-size: 1.3rem;
 }
 
 .other-summary {
@@ -726,7 +824,8 @@ main {
 
   .option-grid,
   .results-grid,
-  .metrics-grid {
+  .metrics-grid,
+  .overview-grid {
     grid-template-columns: 1fr;
   }
 
@@ -740,6 +839,15 @@ main {
 
   .step-actions {
     justify-content: space-between;
+  }
+
+  .dashboard-header-card,
+  .sentiment-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header-card {
+    flex-direction: column;
   }
 }
 
