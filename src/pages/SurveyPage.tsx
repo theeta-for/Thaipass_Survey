@@ -208,17 +208,7 @@ export function SurveyPage() {
           ) : null}
         </QuestionCard>
 
-        <div className="step-panel">
-          <div>
-            <h2>
-              Question {currentQuestionIndex + 1} of {surveyQuestions.length}
-            </h2>
-            <p>
-              {isLastQuestion
-                ? "Review your answer, then submit when you are ready."
-                : "Answer this question, then tap Next to continue."}
-            </p>
-          </div>
+        <div className="step-panel step-panel-actions-only">
           <div className="step-actions">
             <button className="ghost-button" type="button" onClick={handleBack} disabled={isFirstQuestion}>
               Back

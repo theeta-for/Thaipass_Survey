@@ -431,6 +431,10 @@ main {
   gap: 10px;
 }
 
+.step-panel-actions-only {
+  justify-content: flex-end;
+}
+
 .primary-button,
 .secondary-button,
 .ghost-button {
