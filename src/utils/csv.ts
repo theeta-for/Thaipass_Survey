@@ -35,7 +35,10 @@ export function downloadResponsesCsv(responses: SurveyResponse[]) {
     response.timestamp,
     ...surveyQuestions.map((question) => answerToCsvValue(response, question.id)),
     Object.entries(response.otherAnswers)
-      .map(([questionId, text]) => `${questionId}: ${text}`)
+      .map(([questionId, text]) => {
+        const title = surveyQuestions.find((question) => question.id === questionId)?.title ?? questionId;
+        return `${title}: ${text}`;
+      })
       .join("; "),
   ]);
 

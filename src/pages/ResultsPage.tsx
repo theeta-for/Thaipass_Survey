@@ -25,6 +25,27 @@ function answerPreview(answer: unknown) {
   return String(answer ?? "");
 }
 
+function otherTextForQuestion(responses: SurveyResponse[], questionId: string) {
+  return responses
+    .map((response) => response.otherAnswers[questionId])
+    .filter((text): text is string => Boolean(text?.trim()));
+}
+
+function otherTextPreview(response: SurveyResponse) {
+  const entries = Object.entries(response.otherAnswers).filter(([, text]) => text.trim());
+  if (!entries.length) {
+    return "-";
+  }
+
+  return entries
+    .map(([questionId, text]) => {
+      const questionIndex = surveyQuestions.findIndex((question) => question.id === questionId);
+      const label = questionIndex >= 0 ? `Q${questionIndex + 1}` : questionId;
+      return `${label}: ${text}`;
+    })
+    .join("; ");
+}
+
 export function ResultsPage() {
   const [responses, setResponses] = useState<SurveyResponse[]>(() => getResponses());
 
@@ -121,6 +142,17 @@ export function ResultsPage() {
                     ))}
                   </div>
                 )}
+
+                {otherTextForQuestion(responses, question.id).length ? (
+                  <div className="other-summary">
+                    <strong>Other text responses</strong>
+                    <ul>
+                      {otherTextForQuestion(responses, question.id).map((text, otherIndex) => (
+                        <li key={`${text}-${otherIndex}`}>{text}</li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : null}
               </article>
             ))}
           </section>
@@ -148,7 +180,7 @@ export function ResultsPage() {
                       {surveyQuestions.map((question) => (
                         <td key={question.id}>{answerPreview(response.answers[question.id])}</td>
                       ))}
-                      <td>{Object.values(response.otherAnswers).filter(Boolean).join("; ") || "-"}</td>
+                      <td>{otherTextPreview(response)}</td>
                     </tr>
                   ))}
                 </tbody>

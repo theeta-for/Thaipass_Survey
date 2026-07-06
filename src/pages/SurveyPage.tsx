@@ -3,6 +3,7 @@ import { MultipleChoiceQuestion } from "../components/MultipleChoiceQuestion";
 import { ProgressBar } from "../components/ProgressBar";
 import { QuestionCard } from "../components/QuestionCard";
 import { RatingMatrixQuestion } from "../components/RatingMatrixQuestion";
+import { SelectQuestion } from "../components/SelectQuestion";
 import { SingleChoiceQuestion } from "../components/SingleChoiceQuestion";
 import { SurveyLayout } from "../components/SurveyLayout";
 import { surveyQuestions } from "../data/surveyQuestions";
@@ -139,8 +140,8 @@ export function SurveyPage() {
   return (
     <SurveyLayout
       eyebrow="ThaiPass user research"
-      title="ThaiPass Travel Survey"
-      description="Help us improve ThaiPass for travelers visiting Thailand. This survey takes about 3 minutes."
+      title="ThaiPass Concept Validation Survey"
+      description="Help us understand whether the idea of ThaiPass as a Thailand Travel Assistant is useful for travelers visiting Thailand. This survey takes about 3 minutes."
     >
       <form className="survey-form" onSubmit={handleSubmit} noValidate>
         <ProgressBar answered={answeredCount} total={surveyQuestions.length} />
@@ -168,16 +169,40 @@ export function SurveyPage() {
           key={currentQuestion.id}
           number={currentQuestionIndex + 1}
           title={currentQuestion.title}
+          description={currentQuestion.description}
           instruction={currentQuestion.type === "multiple" ? currentQuestion.instruction : undefined}
           error={errors[currentQuestion.id]}
         >
           {currentQuestion.type === "single" ? (
-            <SingleChoiceQuestion
-              name={currentQuestion.id}
-              options={currentQuestion.options}
-              value={answers[currentQuestion.id] as string | undefined}
-              onChange={(value) => updateAnswer(currentQuestion.id, value)}
-            />
+            <>
+              {currentQuestion.display === "select" ? (
+                <SelectQuestion
+                  name={currentQuestion.id}
+                  options={currentQuestion.options}
+                  placeholder={currentQuestion.placeholder}
+                  value={answers[currentQuestion.id] as string | undefined}
+                  onChange={(value) => updateAnswer(currentQuestion.id, value)}
+                />
+              ) : (
+                <SingleChoiceQuestion
+                  name={currentQuestion.id}
+                  options={currentQuestion.options}
+                  value={answers[currentQuestion.id] as string | undefined}
+                  onChange={(value) => updateAnswer(currentQuestion.id, value)}
+                />
+              )}
+              {currentQuestion.allowOther && answers[currentQuestion.id] === "Other" ? (
+                <label className="other-field">
+                  <span>Please tell us more</span>
+                  <input
+                    type="text"
+                    value={otherAnswers[currentQuestion.id] ?? ""}
+                    onChange={(event) => updateOtherAnswer(currentQuestion.id, event.target.value)}
+                    placeholder="Type your answer"
+                  />
+                </label>
+              ) : null}
+            </>
           ) : null}
 
           {currentQuestion.type === "multiple" ? (

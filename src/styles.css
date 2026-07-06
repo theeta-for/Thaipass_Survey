@@ -26,7 +26,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -118,7 +119,9 @@ main {
 .hero-copy h1 {
   max-width: 760px;
   margin: 0;
+  font-family: "Noto Serif", Georgia, serif;
   font-size: clamp(2rem, 5vw, 4rem);
+  font-weight: 800;
   line-height: 1.02;
 }
 
@@ -219,6 +222,23 @@ main {
   margin-bottom: 18px;
 }
 
+.concept-statement {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--soft);
+  color: var(--ink);
+}
+
+.concept-statement p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
 .question-number {
   display: grid;
   flex: 0 0 auto;
@@ -306,6 +326,37 @@ main {
   padding: 13px 14px;
   color: var(--ink);
   background: var(--white);
+}
+
+.select-field {
+  display: block;
+  max-width: 520px;
+}
+
+.select-field select {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0 42px 0 16px;
+  color: var(--ink);
+  background: var(--soft);
+  cursor: pointer;
+}
+
+.select-field select:focus,
+.other-field input:focus {
+  border-color: var(--thai-red);
+  outline: 3px solid rgba(215, 25, 32, 0.12);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
 }
 
 .rating-matrix {
@@ -432,6 +483,10 @@ main {
 }
 
 .step-panel-actions-only {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
   justify-content: flex-end;
 }
 
@@ -538,6 +593,27 @@ main {
 .rating-summary {
   display: grid;
   gap: 12px;
+}
+
+.other-summary {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--soft);
+}
+
+.other-summary strong {
+  display: block;
+  margin-bottom: 8px;
+}
+
+.other-summary ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  line-height: 1.45;
 }
 
 .bar-row-label,

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fontsource/noto-sans": "^5.2.10",
+    "@fontsource/noto-serif": "^5.2.9",
     "@vitejs/plugin-react": "^4.3.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
