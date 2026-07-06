@@ -17,7 +17,28 @@ export function saveResponse(response: SurveyResponse) {
   window.dispatchEvent(new Event("thaipass-survey-updated"));
 }
 
-export function clearResponses() {
-  localStorage.removeItem(STORAGE_KEY);
+function updateResponses(responses: SurveyResponse[]) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(responses));
   window.dispatchEvent(new Event("thaipass-survey-updated"));
+}
+
+export function softDeleteResponse(responseId: string) {
+  updateResponses(
+    getResponses().map((response) =>
+      response.id === responseId ? { ...response, deletedAt: new Date().toISOString() } : response,
+    ),
+  );
+}
+
+export function restoreResponse(responseId: string) {
+  updateResponses(
+    getResponses().map((response) => {
+      if (response.id !== responseId) {
+        return response;
+      }
+
+      const { deletedAt, ...restoredResponse } = response;
+      return restoredResponse;
+    }),
+  );
 }

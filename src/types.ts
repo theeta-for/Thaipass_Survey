@@ -41,6 +41,7 @@ export type OtherAnswers = Record<string, string>;
 export type SurveyResponse = {
   id: string;
   timestamp: string;
+  deletedAt?: string;
   answers: SurveyAnswers;
   otherAnswers: OtherAnswers;
 };

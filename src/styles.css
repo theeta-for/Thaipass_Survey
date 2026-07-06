@@ -441,15 +441,18 @@ main {
 }
 
 .question-tabs {
-  display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
+  display: flex;
   gap: 8px;
   max-width: 1120px;
   margin: 0 auto;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
 }
 
 .question-tab {
   display: grid;
+  flex: 0 0 64px;
   min-height: 42px;
   place-items: center;
   border: 1px solid var(--line);
@@ -580,6 +583,39 @@ main {
 
 .dashboard-header-card strong {
   font-size: clamp(1rem, 2vw, 1.35rem);
+}
+
+.dashboard-header-card p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.results-view-tabs {
+  display: flex;
+  gap: 8px;
+  max-width: 1120px;
+  margin: 0 auto 18px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.results-view-tabs button {
+  flex: 1;
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  color: var(--muted);
+  background: transparent;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.results-view-tabs button.is-active {
+  color: var(--white);
+  background: var(--thai-red);
+  box-shadow: 0 8px 18px rgba(215, 25, 32, 0.2);
 }
 
 .metric-card {
@@ -813,6 +849,47 @@ main {
   border-bottom: 0;
 }
 
+.responses-table tr.is-deleted td {
+  color: var(--muted);
+  background: #fafafa;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--thai-red);
+  background: var(--soft-red);
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.status-pill.is-deleted {
+  color: var(--muted);
+  background: var(--soft);
+}
+
+.table-action-button {
+  min-height: 34px;
+  border: 1px solid rgba(215, 25, 32, 0.22);
+  border-radius: 999px;
+  padding: 0 12px;
+  color: var(--thai-red);
+  background: var(--soft-red);
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.table-action-button.is-danger {
+  border-color: var(--line);
+  color: var(--muted);
+  background: var(--white);
+}
+
 @media (max-width: 820px) {
   .hero-copy,
   .submit-panel,
@@ -893,10 +970,6 @@ main {
   .brand,
   .brand img {
     width: 112px;
-  }
-
-  .question-tabs {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .step-actions {
