@@ -2,7 +2,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { SurveyLayout } from "../components/SurveyLayout";
 import { surveyQuestions } from "../data/surveyQuestions";
 import type { Question, SurveyResponse } from "../types";
-import { exportToCSV } from "../utils/csv";
+import { exportToPDF } from "../utils/pdf";
 import {
   calculateAnswerShare,
   calculateAverageScore,
@@ -17,7 +17,6 @@ import {
 import { getResponses, restoreResponse, softDeleteResponse } from "../utils/storage";
 
 const RESULTS_PASSWORD = "Thaipass2026";
-const AUTH_STORAGE_KEY = "thaipass-results-authenticated";
 
 const sentimentConfigs: Record<
   string,
@@ -53,6 +52,21 @@ const sentimentConfigs: Record<
     negative: ["Worse"],
   },
 };
+
+const responseDetailFields = [
+  { label: "Nationality", questionId: "nationality" },
+  { label: "Thailand travel status", questionId: "visitStatus" },
+  { label: "Preparation difficulty", questionId: "preparationDifficulty" },
+  { label: "Biggest concerns", questionId: "travelConcerns" },
+  { label: "Concept clarity", questionId: "conceptClarity" },
+  { label: "Best matching description", questionId: "conceptDescription" },
+  { label: "Usefulness", questionId: "travelAssistantUsefulness" },
+  { label: "Most valuable concept parts", questionId: "valuableConceptParts" },
+  { label: "Download likelihood", questionId: "downloadLikelihood" },
+  { label: "Compared to current travel", questionId: "travelComparison" },
+  { label: "Download / not download reason", questionId: "downloadReason" },
+  { label: "Trust factors", questionId: "trustSignals" },
+];
 
 function answerPreview(answer: unknown) {
   if (Array.isArray(answer)) {
@@ -113,8 +127,7 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (password === RESULTS_PASSWORD) {
-      sessionStorage.setItem(AUTH_STORAGE_KEY, "true");
+    if (password.trim() === RESULTS_PASSWORD) {
       onAuthenticated();
       return;
     }
@@ -156,9 +169,12 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 }
 
 export function ResultsPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem(AUTH_STORAGE_KEY) === "true");
+  // This client-side password gate is only for internal review. Replace with backend authentication before production.
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [responses, setResponses] = useState<SurveyResponse[]>(() => getResponses());
   const [activeView, setActiveView] = useState<"summary" | "individual">("summary");
+  const [selectedNationality, setSelectedNationality] = useState("all");
+  const [selectedResponseId, setSelectedResponseId] = useState<string | undefined>();
 
   useEffect(() => {
     function syncResponses() {
@@ -177,8 +193,25 @@ export function ResultsPage() {
     () => [...responses].sort((first, second) => new Date(second.timestamp).getTime() - new Date(first.timestamp).getTime()),
     [responses],
   );
-  const activeResponses = useMemo(() => sortedResponses.filter((response) => !response.deletedAt), [sortedResponses]);
-  const deletedResponsesCount = sortedResponses.length - activeResponses.length;
+
+  const nationalityOptions = useMemo(() => {
+    const nationalities = sortedResponses
+      .map((response) => response.answers.nationality)
+      .filter((answer): answer is string => typeof answer === "string" && answer.trim().length > 0);
+    return Array.from(new Set(nationalities)).sort((first, second) => first.localeCompare(second));
+  }, [sortedResponses]);
+
+  const filteredResponses = useMemo(() => {
+    if (selectedNationality === "all") {
+      return sortedResponses;
+    }
+
+    return sortedResponses.filter((response) => response.answers.nationality === selectedNationality);
+  }, [selectedNationality, sortedResponses]);
+
+  const activeResponses = useMemo(() => filteredResponses.filter((response) => !response.deletedAt), [filteredResponses]);
+  const deletedResponsesCount = filteredResponses.length - activeResponses.length;
+  const selectedResponse = filteredResponses.find((response) => response.id === selectedResponseId) ?? filteredResponses[0];
 
   const mostCommonNationality = getMostCommonAnswer(activeResponses, "nationality");
   const conceptClarityAverage = calculateAverageScore(activeResponses, "conceptClarity", {
@@ -203,8 +236,8 @@ export function ResultsPage() {
       description="Concept Validation Survey"
       actions={
         <div className="dashboard-actions">
-          <button className="secondary-button" type="button" onClick={() => exportToCSV(activeResponses)} disabled={!activeResponses.length}>
-            Export CSV
+          <button className="secondary-button" type="button" onClick={() => exportToPDF(activeResponses)} disabled={!activeResponses.length}>
+            Export PDF
           </button>
         </div>
       }
@@ -237,6 +270,20 @@ export function ResultsPage() {
           Individual responses
         </button>
       </div>
+
+      <section className="results-filter-card" aria-label="Results filters">
+        <label>
+          <span>Filter by nationality</span>
+          <select value={selectedNationality} onChange={(event) => setSelectedNationality(event.target.value)}>
+            <option value="all">All nationalities</option>
+            {nationalityOptions.map((nationality) => (
+              <option key={nationality} value={nationality}>
+                {nationality}
+              </option>
+            ))}
+          </select>
+        </label>
+      </section>
 
       {!sortedResponses.length ? (
         <section className="empty-state">
@@ -353,70 +400,78 @@ export function ResultsPage() {
                   {activeResponses.length} active, {deletedResponsesCount} soft-deleted. Deleted responses can be restored.
                 </p>
               </div>
-              <div className="responses-table-wrap">
-                <table className="responses-table">
-                  <thead>
-                    <tr>
-                      <th>Date</th>
-                      <th>Time</th>
-                      <th>Nationality</th>
-                      <th>Thailand travel status</th>
-                      <th>Preparation difficulty</th>
-                      <th>Biggest concerns</th>
-                      <th>Concept clarity</th>
-                      <th>Best matching description</th>
-                      <th>Usefulness</th>
-                      <th>Most valuable concept parts</th>
-                      <th>Download likelihood</th>
-                      <th>Compared to current travel</th>
-                      <th>Download / not download reason</th>
-                      <th>Trust factors</th>
-                      <th>Other text</th>
-                      <th>Status</th>
-                      <th>Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedResponses.map((response) => (
-                      <tr className={response.deletedAt ? "is-deleted" : ""} key={response.id}>
-                        <td>{formatDate(response.timestamp)}</td>
-                        <td>{formatTime(response.timestamp)}</td>
-                        <td>{answerWithOther(response, "nationality")}</td>
-                        <td>{answerWithOther(response, "visitStatus")}</td>
-                        <td>{answerWithOther(response, "preparationDifficulty")}</td>
-                        <td>{answerWithOther(response, "travelConcerns")}</td>
-                        <td>{answerWithOther(response, "conceptClarity")}</td>
-                        <td>{answerWithOther(response, "conceptDescription")}</td>
-                        <td>{answerWithOther(response, "travelAssistantUsefulness")}</td>
-                        <td>{answerWithOther(response, "valuableConceptParts")}</td>
-                        <td>{answerWithOther(response, "downloadLikelihood")}</td>
-                        <td>{getQuestion("travelComparison") ? answerWithOther(response, "travelComparison") : "N/A"}</td>
-                        <td>{answerWithOther(response, "downloadReason")}</td>
-                        <td>{answerWithOther(response, "trustSignals")}</td>
-                        <td>{otherTextPreview(response)}</td>
-                        <td>
-                          {response.deletedAt ? (
-                            <span className="status-pill is-deleted">Deleted {formatDateTime(response.deletedAt)}</span>
+              {filteredResponses.length ? (
+                <div className="response-browser">
+                  <div className="response-list" aria-label="Response list">
+                    {filteredResponses.map((response, index) => {
+                      const isSelected = selectedResponse?.id === response.id;
+                      return (
+                        <button
+                          className={`response-list-item ${isSelected ? "is-selected" : ""} ${response.deletedAt ? "is-deleted" : ""}`}
+                          key={response.id}
+                          type="button"
+                          onClick={() => setSelectedResponseId(response.id)}
+                        >
+                          <span>Response {filteredResponses.length - index}</span>
+                          <strong>{answerWithOther(response, "nationality")}</strong>
+                          <small>{formatDate(response.timestamp)}, {formatTime(response.timestamp)}</small>
+                          {response.deletedAt ? <em>Deleted</em> : null}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {selectedResponse ? (
+                    <article className={`response-detail ${selectedResponse.deletedAt ? "is-deleted" : ""}`}>
+                      <div className="response-detail-header">
+                        <div>
+                          <span>{formatDate(selectedResponse.timestamp)}, {formatTime(selectedResponse.timestamp)}</span>
+                          <h3>{answerWithOther(selectedResponse, "nationality")}</h3>
+                        </div>
+                        <div className="response-detail-actions">
+                          {selectedResponse.deletedAt ? (
+                            <>
+                              <span className="status-pill is-deleted">Deleted {formatDateTime(selectedResponse.deletedAt)}</span>
+                              <button className="table-action-button" type="button" onClick={() => restoreResponse(selectedResponse.id)}>
+                                Restore
+                              </button>
+                            </>
                           ) : (
-                            <span className="status-pill">Active</span>
+                            <>
+                              <span className="status-pill">Active</span>
+                              <button
+                                className="table-action-button is-danger"
+                                type="button"
+                                onClick={() => softDeleteResponse(selectedResponse.id)}
+                              >
+                                Delete
+                              </button>
+                            </>
                           )}
-                        </td>
-                        <td>
-                          {response.deletedAt ? (
-                            <button className="table-action-button" type="button" onClick={() => restoreResponse(response.id)}>
-                              Restore
-                            </button>
-                          ) : (
-                            <button className="table-action-button is-danger" type="button" onClick={() => softDeleteResponse(response.id)}>
-                              Delete
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                        </div>
+                      </div>
+
+                      <dl className="response-detail-grid">
+                        {responseDetailFields.map((field) => (
+                          <div key={field.questionId}>
+                            <dt>{field.label}</dt>
+                            <dd>{getQuestion(field.questionId) ? answerWithOther(selectedResponse, field.questionId) : "N/A"}</dd>
+                          </div>
+                        ))}
+                        <div>
+                          <dt>Other text</dt>
+                          <dd>{otherTextPreview(selectedResponse)}</dd>
+                        </div>
+                      </dl>
+                    </article>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="empty-state compact-empty">
+                  <h2>No responses for this nationality.</h2>
+                  <p>Change the filter to see more responses.</p>
+                </div>
+              )}
             </section>
           )}
         </>
