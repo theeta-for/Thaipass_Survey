@@ -102,10 +102,10 @@ main {
 .eyebrow {
   margin: 0 0 10px;
   color: var(--thai-red);
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+  font-size: 1rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
 }
 
 .hero-copy {
