@@ -103,34 +103,26 @@ a {
 }
 
 .language-switch {
-  justify-content: center;
-}
-
-.language-icon-button {
-  display: inline-grid;
-  width: 42px;
-  height: 42px;
-  place-items: center;
+  gap: 4px;
+  padding: 4px;
   border: 1px solid var(--line);
   border-radius: 999px;
-  color: var(--thai-red);
-  background: var(--white);
+  background: var(--soft);
+}
+
+.language-switch button {
+  min-height: 34px;
+  min-width: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 1.05rem;
   cursor: pointer;
 }
 
-.language-icon-button:hover {
-  border-color: rgba(215, 25, 32, 0.28);
-  background: var(--soft-red);
-}
-
-.language-icon-button svg {
-  width: 21px;
-  height: 21px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.language-switch button.is-active {
+  background: var(--white);
+  box-shadow: 0 4px 12px rgba(23, 24, 28, 0.1);
 }
 
 main {
@@ -1456,7 +1448,7 @@ main {
   }
 
   .language-switch {
-    justify-content: flex-start;
+    width: fit-content;
   }
 
   main {
