@@ -13,24 +13,7 @@ type QuestionCardProps = {
 function ConceptMockup() {
   return (
     <div className="concept-mockup" aria-label="Early ThaiPass concept mockup">
-      <div className="mockup-phone">
-        <div className="mockup-top">
-          <span>ThaiPass</span>
-          <strong>Trip ready</strong>
-        </div>
-        <div className="mockup-card is-blue">
-          <span>Before arrival</span>
-          <strong>3 checklist items left</strong>
-        </div>
-        <div className="mockup-card">
-          <span>Documents</span>
-          <strong>Passport info, hotel, insurance</strong>
-        </div>
-        <div className="mockup-card">
-          <span>Support</span>
-          <strong>Emergency info and local help</strong>
-        </div>
-      </div>
+      <img src="/thaipass-concept-mockup.png" alt="ThaiPass early concept mockup showing trip ready, before arrival, documents, and support cards" />
       <p>
         This is an early concept mockup. Please answer based on the app idea, not the visual design.
       </p>

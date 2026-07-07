@@ -282,7 +282,7 @@ main {
 
 .concept-mockup {
   display: grid;
-  grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
   gap: 18px;
   align-items: center;
   margin: 0 0 20px;
@@ -292,55 +292,19 @@ main {
   background: linear-gradient(135deg, var(--thai-blue-soft), var(--white));
 }
 
+.concept-mockup img {
+  display: block;
+  width: min(100%, 280px);
+  height: auto;
+  margin: 0 auto;
+  border-radius: 24px;
+  box-shadow: 0 16px 32px rgba(23, 24, 28, 0.12);
+}
+
 .concept-mockup p {
   margin: 0;
   color: var(--muted);
   line-height: 1.6;
-}
-
-.mockup-phone {
-  display: grid;
-  gap: 10px;
-  border: 1px solid rgba(52, 80, 115, 0.18);
-  border-radius: 24px;
-  padding: 16px;
-  background: var(--white);
-  box-shadow: 0 16px 32px rgba(52, 80, 115, 0.12);
-}
-
-.mockup-top,
-.mockup-card {
-  display: grid;
-  gap: 4px;
-}
-
-.mockup-top {
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--line);
-}
-
-.mockup-top span,
-.mockup-card span {
-  color: var(--muted);
-  font-size: 0.84rem;
-  font-weight: 800;
-}
-
-.mockup-top strong {
-  color: var(--thai-blue);
-  font-size: 1.25rem;
-}
-
-.mockup-card {
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  background: var(--soft);
-}
-
-.mockup-card.is-blue {
-  border-color: rgba(52, 80, 115, 0.22);
-  background: var(--thai-blue-soft);
 }
 
 .question-number {
