@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import type { Language } from "../utils/language";
-import { languageLabels, translate } from "../utils/language";
+import { translate } from "../utils/language";
 
 type SurveyLayoutProps = {
   children: ReactNode;
@@ -22,6 +22,7 @@ export function SurveyLayout({
   onLanguageChange,
 }: SurveyLayoutProps) {
   const t = (text: string | undefined) => translate(text, language);
+  const nextLanguage: Language = language === "en" ? "zh" : "en";
 
   return (
     <div className="app-shell">
@@ -36,16 +37,21 @@ export function SurveyLayout({
           </nav>
           {onLanguageChange ? (
             <div className="language-switch" aria-label="Language">
-              {(["en", "zh"] as Language[]).map((item) => (
-                <button
-                  className={language === item ? "is-active" : ""}
-                  key={item}
-                  type="button"
-                  onClick={() => onLanguageChange(item)}
-                >
-                  {languageLabels[item]}
-                </button>
-              ))}
+              <button
+                className="language-icon-button"
+                type="button"
+                onClick={() => onLanguageChange(nextLanguage)}
+                aria-label={`Switch language to ${nextLanguage === "zh" ? "Chinese" : "English"}`}
+                title={`Switch language to ${nextLanguage === "zh" ? "Chinese" : "English"}`}
+              >
+                <svg aria-hidden="true" viewBox="0 0 24 24">
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M3 12h18" />
+                  <path d="M12 3c2.3 2.4 3.5 5.4 3.5 9s-1.2 6.6-3.5 9" />
+                  <path d="M12 3c-2.3 2.4-3.5 5.4-3.5 9s1.2 6.6 3.5 9" />
+                </svg>
+                <span className="sr-only">Switch language</span>
+              </button>
             </div>
           ) : null}
         </div>
