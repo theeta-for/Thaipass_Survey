@@ -28,8 +28,8 @@ function percentage(count: number, total: number) {
 
 export function formatDate(isoDate: string) {
   return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
+    day: "numeric",
+    month: "long",
     year: "numeric",
   }).format(new Date(isoDate));
 }
@@ -84,12 +84,34 @@ export function calculateMultipleChoicePercentages(question: Question, responses
   });
 }
 
+export function calculateScalePercentages(question: Question, responses: SurveyResponse[]) {
+  if (question.type !== "scale") {
+    return [];
+  }
+
+  return [1, 2, 3, 4, 5].map<OptionSummary>((rating) => {
+    const count = responses.reduce((total, response) => {
+      const answer = response.answers[question.id];
+      return total + (answer === rating ? 1 : 0);
+    }, 0);
+
+    return {
+      option: `${rating}/5`,
+      count,
+      percentage: percentage(count, responses.length),
+    };
+  });
+}
+
 export function summarizeChoiceQuestion(question: Question, responses: SurveyResponse[]) {
   if (question.type === "single") {
     return calculateSingleChoicePercentages(question, responses);
   }
   if (question.type === "multiple") {
     return calculateMultipleChoicePercentages(question, responses);
+  }
+  if (question.type === "scale") {
+    return calculateScalePercentages(question, responses);
   }
   return [];
 }
@@ -173,6 +195,43 @@ export function calculateAnswerShare(responses: SurveyResponse[], questionId: st
     count,
     percentage: percentage(count, responses.length),
   };
+}
+
+export function calculateMultipleAnswerShare(responses: SurveyResponse[], questionId: string, option: string) {
+  const count = responses.reduce((total, response) => {
+    const answer = response.answers[questionId];
+    return total + (Array.isArray(answer) && answer.includes(option) ? 1 : 0);
+  }, 0);
+
+  return {
+    count,
+    percentage: percentage(count, responses.length),
+  };
+}
+
+export function calculateScaleShare(responses: SurveyResponse[], questionId: string, minimumScore: number) {
+  const count = responses.reduce((total, response) => {
+    const answer = response.answers[questionId];
+    return total + (typeof answer === "number" && answer >= minimumScore ? 1 : 0);
+  }, 0);
+
+  return {
+    count,
+    percentage: percentage(count, responses.length),
+  };
+}
+
+export function calculateAverageNumericScore(responses: SurveyResponse[], questionId: string) {
+  const scores = responses
+    .map((response) => response.answers[questionId])
+    .filter((answer): answer is number => typeof answer === "number");
+
+  if (!scores.length) {
+    return undefined;
+  }
+
+  const total = scores.reduce((sum, score) => sum + score, 0);
+  return Number((total / scores.length).toFixed(1));
 }
 
 export function calculateAverageScore(responses: SurveyResponse[], questionId: string, scoreMap: Record<string, number>) {

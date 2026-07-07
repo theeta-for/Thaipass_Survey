@@ -16,6 +16,9 @@ function answerToText(response: SurveyResponse, questionId: string) {
   if (Array.isArray(answer)) {
     return answer.join(", ");
   }
+  if (typeof answer === "number") {
+    return `${answer}/5`;
+  }
   if (answer && typeof answer === "object") {
     return Object.entries(answer)
       .map(([item, rating]) => `${item}: ${rating}`)

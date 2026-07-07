@@ -40,7 +40,7 @@ export function MultipleChoiceQuestion({
           const checked = value.includes(option);
           const disabled = !checked && limitReached;
           return (
-            <label className={`choice-option ${disabled ? "is-disabled" : ""}`} key={option}>
+            <label className={`choice-option ${checked ? "is-selected" : ""} ${disabled ? "is-disabled" : ""}`} key={option}>
               <input
                 type="checkbox"
                 name={name}
@@ -50,6 +50,7 @@ export function MultipleChoiceQuestion({
                 onChange={() => toggleOption(option)}
               />
               <span>{option}</span>
+              {checked ? <i aria-hidden="true" /> : null}
             </label>
           );
         })}

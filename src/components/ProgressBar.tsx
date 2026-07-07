@@ -1,15 +1,16 @@
 type ProgressBarProps = {
   answered: number;
+  current: number;
   total: number;
 };
 
-export function ProgressBar({ answered, total }: ProgressBarProps) {
-  const percentage = total ? Math.round((answered / total) * 100) : 0;
+export function ProgressBar({ answered, current, total }: ProgressBarProps) {
+  const percentage = total ? Math.round((current / total) * 100) : 0;
 
   return (
     <div className="progress-card" aria-label={`Survey progress ${percentage}%`}>
       <div className="progress-copy">
-        <span>Progress</span>
+        <span>Step {current} of {total}</span>
         <strong>
           {answered} of {total} answered
         </strong>

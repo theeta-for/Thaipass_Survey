@@ -3,9 +3,11 @@ import { MultipleChoiceQuestion } from "../components/MultipleChoiceQuestion";
 import { ProgressBar } from "../components/ProgressBar";
 import { QuestionCard } from "../components/QuestionCard";
 import { RatingMatrixQuestion } from "../components/RatingMatrixQuestion";
+import { RatingScaleQuestion } from "../components/RatingScaleQuestion";
 import { SelectQuestion } from "../components/SelectQuestion";
 import { SingleChoiceQuestion } from "../components/SingleChoiceQuestion";
 import { SurveyLayout } from "../components/SurveyLayout";
+import { TextQuestion } from "../components/TextQuestion";
 import { surveyQuestions } from "../data/surveyQuestions";
 import { saveResponse } from "../utils/storage";
 import type { OtherAnswers, SurveyAnswers, SurveyResponse } from "../types";
@@ -13,15 +15,28 @@ import type { OtherAnswers, SurveyAnswers, SurveyResponse } from "../types";
 type ValidationErrors = Record<string, string>;
 
 function isQuestionAnswered(questionId: string, answers: SurveyAnswers) {
+  const question = surveyQuestions.find((item) => item.id === questionId);
+  if (question?.required === false) {
+    return true;
+  }
+
+  return hasAnswer(questionId, answers);
+}
+
+function hasAnswer(questionId: string, answers: SurveyAnswers) {
+  const question = surveyQuestions.find((item) => item.id === questionId);
+
   const answer = answers[questionId];
   if (Array.isArray(answer)) {
     return answer.length > 0;
   }
+  if (typeof answer === "number") {
+    return answer >= 1 && answer <= 5;
+  }
   if (answer && typeof answer === "object") {
-    const question = surveyQuestions.find((item) => item.id === questionId);
     return question?.type === "rating" && question.items.every((item) => answer[item]);
   }
-  return Boolean(answer);
+  return typeof answer === "string" ? answer.trim().length > 0 : Boolean(answer);
 }
 
 function validateAnswers(answers: SurveyAnswers): ValidationErrors {
@@ -30,7 +45,7 @@ function validateAnswers(answers: SurveyAnswers): ValidationErrors {
       errors[question.id] =
         question.type === "rating"
           ? "Please rate every service before submitting."
-          : "Please choose at least one answer.";
+          : "Please select an answer before continuing.";
     }
     return errors;
   }, {});
@@ -40,18 +55,19 @@ function questionErrorMessage(questionId: string) {
   const question = surveyQuestions.find((item) => item.id === questionId);
   return question?.type === "rating"
     ? "Please rate every service before continuing."
-    : "Please choose at least one answer before continuing.";
+    : "Please select an answer before continuing.";
 }
 
 export function SurveyPage() {
   const [answers, setAnswers] = useState<SurveyAnswers>({});
   const [otherAnswers, setOtherAnswers] = useState<OtherAnswers>({});
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
 
   const answeredCount = useMemo(
-    () => surveyQuestions.filter((question) => isQuestionAnswered(question.id, answers)).length,
+    () => surveyQuestions.filter((question) => hasAnswer(question.id, answers)).length,
     [answers],
   );
   const currentQuestion = surveyQuestions[currentQuestionIndex];
@@ -106,6 +122,7 @@ export function SurveyPage() {
       return;
     }
 
+    setIsSubmitting(true);
     const response: SurveyResponse = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
@@ -113,23 +130,26 @@ export function SurveyPage() {
       otherAnswers,
     };
 
-    saveResponse(response);
-    setSubmitted(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.setTimeout(() => {
+      saveResponse(response);
+      setIsSubmitting(false);
+      setSubmitted(true);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 450);
   }
 
   if (submitted) {
     return (
       <SurveyLayout
         eyebrow="Research survey"
-        title="Thank you for helping ThaiPass improve."
-        description="Your answers have been saved. We appreciate your time and your travel perspective."
+        title="Thank you for your feedback."
+        description="Your response has been submitted successfully."
         actions={<a className="secondary-button" href="/results">View results</a>}
       >
         <section className="thank-you-card">
-          <h2>All set</h2>
+          <h2>Your response has been submitted successfully.</h2>
           <p>
-            Your response will help shape a more useful Thailand Trip Assistant for travelers arriving in Thailand.
+            Your answers will help us understand whether ThaiPass is useful before the final product is designed.
           </p>
           <a className="primary-button" href="/survey">Submit another response</a>
         </section>
@@ -139,17 +159,17 @@ export function SurveyPage() {
 
   return (
     <SurveyLayout
-      eyebrow="ThaiPass user research"
-      title="ThaiPass Concept Validation Survey"
-      description="Help us understand whether the idea of ThaiPass as a Thailand Travel Assistant is useful for travelers visiting Thailand. This survey takes about 3 minutes."
+      eyebrow="Concept validation"
+      title="ThaiPass Survey"
+      description="Help us validate ThaiPass, a Thailand Travel Assistant concept for international travelers. This survey takes around 2-3 minutes and does not require personal data."
     >
       <form className="survey-form" onSubmit={handleSubmit} noValidate>
-        <ProgressBar answered={answeredCount} total={surveyQuestions.length} />
+        <ProgressBar answered={answeredCount} current={currentQuestionIndex + 1} total={surveyQuestions.length} />
 
         <div className="question-tabs" aria-label="Survey questions">
           {surveyQuestions.map((question, index) => {
             const isActive = index === currentQuestionIndex;
-            const isAnswered = isQuestionAnswered(question.id, answers);
+            const isAnswered = hasAnswer(question.id, answers);
 
             return (
               <button
@@ -172,6 +192,7 @@ export function SurveyPage() {
           description={currentQuestion.description}
           instruction={currentQuestion.type === "multiple" ? currentQuestion.instruction : undefined}
           error={errors[currentQuestion.id]}
+          showConceptMockup={currentQuestion.showConceptMockup}
         >
           {currentQuestion.type === "single" ? (
             <>
@@ -179,6 +200,8 @@ export function SurveyPage() {
                 <SelectQuestion
                   name={currentQuestion.id}
                   options={currentQuestion.options}
+                  optionGroups={currentQuestion.optionGroups}
+                  label={currentQuestion.fieldLabel}
                   placeholder={currentQuestion.placeholder}
                   value={answers[currentQuestion.id] as string | undefined}
                   onChange={(value) => updateAnswer(currentQuestion.id, value)}
@@ -231,6 +254,25 @@ export function SurveyPage() {
               }}
             />
           ) : null}
+
+          {currentQuestion.type === "scale" ? (
+            <RatingScaleQuestion
+              name={currentQuestion.id}
+              minLabel={currentQuestion.scaleMinLabel}
+              maxLabel={currentQuestion.scaleMaxLabel}
+              value={answers[currentQuestion.id] as number | undefined}
+              onChange={(value) => updateAnswer(currentQuestion.id, value)}
+            />
+          ) : null}
+
+          {currentQuestion.type === "text" ? (
+            <TextQuestion
+              name={currentQuestion.id}
+              placeholder={currentQuestion.placeholder}
+              value={answers[currentQuestion.id] as string | undefined}
+              onChange={(value) => updateAnswer(currentQuestion.id, value)}
+            />
+          ) : null}
         </QuestionCard>
 
         <div className="step-panel step-panel-actions-only">
@@ -239,12 +281,12 @@ export function SurveyPage() {
               Back
             </button>
             {isLastQuestion ? (
-              <button className="primary-button" type="submit">
-                Submit survey
+              <button className="primary-button" type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Submitting your response..." : "Submit response"}
               </button>
             ) : (
               <button className="primary-button" type="button" onClick={handleNext}>
-                Next
+                Continue
               </button>
             )}
           </div>

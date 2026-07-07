@@ -4,9 +4,11 @@ import { surveyQuestions } from "../data/surveyQuestions";
 import type { Question, SurveyResponse } from "../types";
 import { exportToPDF } from "../utils/pdf";
 import {
-  calculateAnswerShare,
-  calculateAverageScore,
+  calculateAverageNumericScore,
+  calculateMultipleAnswerShare,
   calculatePositiveNeutralNegativeSummary,
+  calculateScaleShare,
+  calculateScalePercentages,
   calculateSingleChoicePercentages,
   calculateMultipleChoicePercentages,
   formatDate,
@@ -17,6 +19,7 @@ import {
 import { getResponses, restoreResponse, softDeleteResponse } from "../utils/storage";
 
 const RESULTS_PASSWORD = "Thaipass2026";
+const RESULTS_AUTH_KEY = "thaipass-results-authenticated";
 
 const sentimentConfigs: Record<
   string,
@@ -27,50 +30,33 @@ const sentimentConfigs: Record<
     negative: string[];
   }
 > = {
-  conceptClarity: {
-    title: "Concept clarity",
-    positive: ["Very clear", "Somewhat clear"],
-    neutral: ["Neutral"],
-    negative: ["Not very clear", "Not clear at all"],
-  },
-  travelAssistantUsefulness: {
-    title: "Usefulness",
-    positive: ["Very useful", "Somewhat useful"],
-    neutral: ["Neutral"],
-    negative: ["Not very useful", "Not useful at all"],
-  },
-  downloadLikelihood: {
-    title: "Download intent",
-    positive: ["Very likely", "Somewhat likely"],
+  preferredPlatform: {
+    title: "Platform preference",
+    positive: ["Website", "Mobile app", "Existing travel platform"],
     neutral: ["Not sure"],
-    negative: ["Somewhat unlikely", "Very unlikely"],
-  },
-  travelComparison: {
-    title: "Compared to current travel",
-    positive: ["Much better", "Somewhat better"],
-    neutral: ["About the same", "I’m not sure"],
-    negative: ["Worse"],
+    negative: [],
   },
 };
 
 const responseDetailFields = [
-  { label: "Nationality", questionId: "nationality" },
-  { label: "Thailand travel status", questionId: "visitStatus" },
-  { label: "Preparation difficulty", questionId: "preparationDifficulty" },
-  { label: "Biggest concerns", questionId: "travelConcerns" },
-  { label: "Concept clarity", questionId: "conceptClarity" },
-  { label: "Best matching description", questionId: "conceptDescription" },
-  { label: "Usefulness", questionId: "travelAssistantUsefulness" },
-  { label: "Most valuable concept parts", questionId: "valuableConceptParts" },
-  { label: "Download likelihood", questionId: "downloadLikelihood" },
-  { label: "Compared to current travel", questionId: "travelComparison" },
-  { label: "Download / not download reason", questionId: "downloadReason" },
-  { label: "Trust factors", questionId: "trustSignals" },
+  { label: "Country", questionId: "nationality" },
+  { label: "Travel experience", questionId: "visitStatus" },
+  { label: "Most stressful preparation", questionId: "stressfulPreparation" },
+  { label: "Usefulness score", questionId: "usefulnessScore" },
+  { label: "Useful before arrival", questionId: "beforeArrivalFeatures" },
+  { label: "Useful during trip", questionId: "duringTripFeatures" },
+  { label: "Concept clarity score", questionId: "conceptClarityScore" },
+  { label: "Trust factors", questionId: "trustFactors" },
+  { label: "Preferred platform", questionId: "preferredPlatform" },
+  { label: "Additional feedback", questionId: "additionalFeedback" },
 ];
 
 function answerPreview(answer: unknown) {
   if (Array.isArray(answer)) {
     return answer.join(", ");
+  }
+  if (typeof answer === "number") {
+    return `${answer}/5`;
   }
   if (answer && typeof answer === "object") {
     return Object.entries(answer)
@@ -90,6 +76,12 @@ function answerWithOther(response: SurveyResponse, questionId: string) {
   const answer = answerPreview(response.answers[questionId]);
   const otherText = response.otherAnswers[questionId];
   return otherText?.trim() ? `${answer} (${otherText})` : answer;
+}
+
+function textForQuestion(responses: SurveyResponse[], questionId: string) {
+  return responses
+    .map((response) => response.answers[questionId])
+    .filter((answer): answer is string => typeof answer === "string" && answer.trim().length > 0);
 }
 
 function otherTextPreview(response: SurveyResponse) {
@@ -118,38 +110,49 @@ function getPercentages(question: Question, responses: SurveyResponse[]) {
   if (question.type === "multiple") {
     return calculateMultipleChoicePercentages(question, responses);
   }
+  if (question.type === "scale") {
+    return calculateScalePercentages(question, responses);
+  }
   return [];
 }
 
 function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (password.trim() === RESULTS_PASSWORD) {
-      onAuthenticated();
-      return;
-    }
+    setIsLoading(true);
 
-    setError("Incorrect password. Please try again.");
+    window.setTimeout(() => {
+      if (password.trim() === RESULTS_PASSWORD) {
+        sessionStorage.setItem(RESULTS_AUTH_KEY, "true");
+        onAuthenticated();
+        return;
+      }
+
+      setIsLoading(false);
+      setError("Incorrect password. Please try again.");
+    }, 350);
   }
 
   return (
     <SurveyLayout
-      eyebrow="Admin dashboard"
-      title="ThaiPass Survey Results"
+      eyebrow="Internal review"
+      title="Survey Results"
       description="Concept Validation Survey"
     >
       <section className="password-card">
-        <h2>Enter results password</h2>
+        <h2>Survey Results</h2>
         <p>Survey results are available for internal review only.</p>
         {/* Replace this client-side gate with backend authentication before production. */}
         <form className="password-form" onSubmit={handleSubmit}>
           <label>
-            <span>Password</span>
+            <span>Enter password</span>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(event) => {
                 setPassword(event.target.value);
@@ -158,9 +161,12 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
               placeholder="Enter password"
             />
           </label>
+          <button className="password-toggle" type="button" onClick={() => setShowPassword((current) => !current)}>
+            {showPassword ? "Hide password" : "Show password"}
+          </button>
           {error ? <p className="field-error">{error}</p> : null}
-          <button className="primary-button" type="submit">
-            View results
+          <button className="primary-button" type="submit" disabled={isLoading}>
+            {isLoading ? "Checking password..." : "View results"}
           </button>
         </form>
       </section>
@@ -170,7 +176,7 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 
 export function ResultsPage() {
   // This client-side password gate is only for internal review. Replace with backend authentication before production.
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem(RESULTS_AUTH_KEY) === "true");
   const [responses, setResponses] = useState<SurveyResponse[]>(() => getResponses());
   const [activeView, setActiveView] = useState<"summary" | "individual">("summary");
   const [selectedNationality, setSelectedNationality] = useState("all");
@@ -214,15 +220,11 @@ export function ResultsPage() {
   const selectedResponse = filteredResponses.find((response) => response.id === selectedResponseId) ?? filteredResponses[0];
 
   const mostCommonNationality = getMostCommonAnswer(activeResponses, "nationality");
-  const conceptClarityAverage = calculateAverageScore(activeResponses, "conceptClarity", {
-    "Very clear": 5,
-    "Somewhat clear": 4,
-    Neutral: 3,
-    "Not very clear": 2,
-    "Not clear at all": 1,
-  });
-  const downloadIntent = calculateAnswerShare(activeResponses, "downloadLikelihood", ["Very likely", "Somewhat likely"]);
-  const betterThanCurrent = calculateAnswerShare(activeResponses, "travelComparison", ["Much better", "Somewhat better"]);
+  const usefulnessAverage = calculateAverageNumericScore(activeResponses, "usefulnessScore");
+  const usefulShare = calculateScaleShare(activeResponses, "usefulnessScore", 4);
+  const clarityShare = calculateScaleShare(activeResponses, "conceptClarityScore", 4);
+  const checklistShare = calculateMultipleAnswerShare(activeResponses, "beforeArrivalFeatures", "Pre-arrival checklist");
+  const entryStressShare = calculateMultipleAnswerShare(activeResponses, "stressfulPreparation", "Understanding entry requirements");
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
 
   if (!isAuthenticated) {
@@ -244,8 +246,8 @@ export function ResultsPage() {
     >
       <section className="dashboard-header-card">
         <div>
-          <span>Active responses</span>
-          <strong>{activeResponses.length}</strong>
+          <span>Total responses</span>
+          <strong>Total responses: {activeResponses.length}</strong>
           {deletedResponsesCount ? <p>{deletedResponsesCount} soft-deleted</p> : null}
         </div>
         <div>
@@ -273,9 +275,9 @@ export function ResultsPage() {
 
       <section className="results-filter-card" aria-label="Results filters">
         <label>
-          <span>Filter by nationality</span>
+          <span>Filter by country</span>
           <select value={selectedNationality} onChange={(event) => setSelectedNationality(event.target.value)}>
-            <option value="all">All nationalities</option>
+            <option value="all">All countries</option>
             {nationalityOptions.map((nationality) => (
               <option key={nationality} value={nationality}>
                 {nationality}
@@ -297,27 +299,35 @@ export function ResultsPage() {
             <>
               <section className="metrics-grid overview-grid">
                 <article className="metric-card">
-                  <span>Total responses</span>
-                  <strong>{activeResponses.length}</strong>
+                  <span>ThaiPass usefulness</span>
+                  <strong>{usefulShare.percentage}%</strong>
+                  <p>Rated 4 or 5 out of 5</p>
+                  <p className="metric-insight">This suggests whether the core travel assistant concept has strong potential.</p>
                 </article>
                 <article className="metric-card">
-                  <span>Most common nationality</span>
+                  <span>Most common country</span>
                   <strong>{mostCommonNationality?.answer ?? "N/A"}</strong>
                   <p>{mostCommonNationality ? `${mostCommonNationality.count} responses` : "No data yet"}</p>
                 </article>
                 <article className="metric-card">
-                  <span>Average concept clarity</span>
-                  <strong>{conceptClarityAverage ? `${conceptClarityAverage}/5` : "N/A"}</strong>
+                  <span>Average usefulness score</span>
+                  <strong>{usefulnessAverage ? `${usefulnessAverage}/5` : "N/A"}</strong>
                 </article>
                 <article className="metric-card">
-                  <span>Download intent</span>
-                  <strong>{downloadIntent.percentage}%</strong>
-                  <p>Very likely or somewhat likely</p>
+                  <span>Value clarity</span>
+                  <strong>{clarityShare.percentage}%</strong>
+                  <p>Rated 4 or 5 after seeing the concept</p>
                 </article>
                 <article className="metric-card">
-                  <span>ThaiPass feels better</span>
-                  <strong>{betterThanCurrent.percentage}%</strong>
-                  <p>Much better or somewhat better</p>
+                  <span>Pre-arrival checklist</span>
+                  <strong>{checklistShare.percentage}%</strong>
+                  <p>Selected as a useful before-arrival feature</p>
+                  <p className="metric-insight">This points to trip preparation as a likely priority area.</p>
+                </article>
+                <article className="metric-card">
+                  <span>Entry requirements stress</span>
+                  <strong>{entryStressShare.percentage}%</strong>
+                  <p>Selected as a stressful preparation area</p>
                 </article>
               </section>
 
@@ -376,6 +386,17 @@ export function ResultsPage() {
                           </div>
                         ))}
                       </div>
+
+                      {question.type === "text" && textForQuestion(activeResponses, question.id).length ? (
+                        <div className="other-summary">
+                          <strong>Text responses</strong>
+                          <ul>
+                            {textForQuestion(activeResponses, question.id).map((text, textIndex) => (
+                              <li key={`${text}-${textIndex}`}>{text}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : null}
 
                       {otherTextForQuestion(activeResponses, question.id).length ? (
                         <div className="other-summary">

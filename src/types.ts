@@ -1,40 +1,62 @@
-export type QuestionType = "single" | "multiple" | "rating";
+export type QuestionType = "single" | "multiple" | "rating" | "scale" | "text";
 
-export type SingleChoiceQuestion = {
+export type OptionGroup = {
+  label: string;
+  options: string[];
+};
+
+type QuestionBase = {
   id: string;
-  type: "single";
   title: string;
   description?: string;
+  required?: boolean;
+  showConceptMockup?: boolean;
+};
+
+export type SingleChoiceQuestion = QuestionBase & {
+  type: "single";
   display?: "radio" | "select";
+  fieldLabel?: string;
   placeholder?: string;
   options: string[];
+  optionGroups?: OptionGroup[];
   allowOther?: boolean;
 };
 
-export type MultipleChoiceQuestion = {
-  id: string;
+export type MultipleChoiceQuestion = QuestionBase & {
   type: "multiple";
-  title: string;
-  description?: string;
   instruction?: string;
   maxSelections?: number;
   options: string[];
   allowOther?: boolean;
 };
 
-export type RatingMatrixQuestion = {
-  id: string;
+export type RatingMatrixQuestion = QuestionBase & {
   type: "rating";
-  title: string;
-  description?: string;
   scaleMinLabel: string;
   scaleMaxLabel: string;
   items: string[];
 };
 
-export type Question = SingleChoiceQuestion | MultipleChoiceQuestion | RatingMatrixQuestion;
+export type RatingScaleQuestion = QuestionBase & {
+  type: "scale";
+  scaleMinLabel: string;
+  scaleMaxLabel: string;
+};
 
-export type SurveyAnswers = Record<string, string | string[] | Record<string, number>>;
+export type TextQuestion = QuestionBase & {
+  type: "text";
+  placeholder?: string;
+};
+
+export type Question =
+  | SingleChoiceQuestion
+  | MultipleChoiceQuestion
+  | RatingMatrixQuestion
+  | RatingScaleQuestion
+  | TextQuestion;
+
+export type SurveyAnswers = Record<string, string | string[] | number | Record<string, number>>;
 
 export type OtherAnswers = Record<string, string>;
 
