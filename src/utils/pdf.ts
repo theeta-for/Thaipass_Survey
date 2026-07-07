@@ -1,5 +1,5 @@
 import { surveyQuestions } from "../data/surveyQuestions";
-import type { Question, SurveyResponse } from "../types";
+import type { SurveyResponse } from "../types";
 import { formatDate, formatTime } from "./results";
 
 function escapeHtml(value: unknown) {
@@ -11,8 +11,8 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#039;");
 }
 
-function answerToText(response: SurveyResponse, question: Question) {
-  const answer = response.answers[question.id];
+function answerToText(response: SurveyResponse, questionId: string) {
+  const answer = response.answers[questionId];
   if (Array.isArray(answer)) {
     return answer.join(", ");
   }
@@ -21,10 +21,7 @@ function answerToText(response: SurveyResponse, question: Question) {
   }
   if (answer && typeof answer === "object") {
     return Object.entries(answer)
-      .map(([item, rating]) => {
-        const label = question.type === "rating" ? question.items.find((ratingItem) => ratingItem.id === item)?.label : undefined;
-        return `${label ?? item}: ${rating}`;
-      })
+      .map(([item, rating]) => `${item}: ${rating}`)
       .join(", ");
   }
   return String(answer ?? "-");
@@ -57,7 +54,7 @@ export function exportToPDF(responses: SurveyResponse[]) {
           <td>${escapeHtml(response.timestamp)}</td>
           <td>${escapeHtml(formatDate(response.timestamp))}</td>
           <td>${escapeHtml(formatTime(response.timestamp))}</td>
-          ${surveyQuestions.map((question) => `<td>${escapeHtml(answerToText(response, question))}</td>`).join("")}
+          ${surveyQuestions.map((question) => `<td>${escapeHtml(answerToText(response, question.id))}</td>`).join("")}
           <td>${escapeHtml(otherText(response))}</td>
         </tr>
       `,

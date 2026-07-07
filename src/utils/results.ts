@@ -125,13 +125,13 @@ export function summarizeRatingQuestion(question: Question, responses: SurveyRes
     const values = responses
       .map((response) => response.answers[question.id])
       .filter((answer): answer is Record<string, string | number> => Boolean(answer) && typeof answer === "object" && !Array.isArray(answer))
-      .map((answer) => answer[item.id])
+      .map((answer) => answer[item])
       .filter((rating): rating is number => typeof rating === "number");
 
     const total = values.reduce((sum, value) => sum + value, 0);
 
     return {
-      item: item.label,
+      item,
       average: values.length ? Number((total / values.length).toFixed(1)) : 0,
       count: values.length,
     };

@@ -33,7 +33,7 @@ function hasAnswer(questionId: string, answers: SurveyAnswers) {
     return answer >= 1 && answer <= 5;
   }
   if (answer && typeof answer === "object") {
-    return question?.type === "rating" && question.items.every((item) => answer[item.id]);
+    return question?.type === "rating" && question.items.every((item) => answer[item]);
   }
   return typeof answer === "string" ? answer.trim().length > 0 : Boolean(answer);
 }
@@ -204,7 +204,6 @@ export function SurveyPage() {
         <QuestionCard
           key={currentQuestion.id}
           number={currentQuestionIndex + 1}
-          sectionTitle={currentQuestion.sectionTitle}
           title={currentQuestion.title}
           description={currentQuestion.description}
           instruction={currentQuestion.type === "multiple" ? currentQuestion.instruction : undefined}
@@ -265,6 +264,7 @@ export function SurveyPage() {
               minLabel={currentQuestion.scaleMinLabel}
               maxLabel={currentQuestion.scaleMaxLabel}
               scaleOptions={currentQuestion.scaleOptions}
+              itemGroups={currentQuestion.itemGroups}
               value={(answers[currentQuestion.id] as Record<string, string | number> | undefined) ?? {}}
               onChange={(item, rating) => {
                 const current = (answers[currentQuestion.id] as Record<string, string | number> | undefined) ?? {};

@@ -319,14 +319,6 @@ main {
   font-weight: 800;
 }
 
-.question-section-title {
-  display: block;
-  margin-bottom: 6px;
-  color: var(--thai-blue);
-  font-size: 0.9rem;
-  font-weight: 900;
-}
-
 .question-heading h2,
 .submit-panel h2,
 .result-heading h2,
@@ -494,6 +486,23 @@ main {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 700;
+}
+
+.rating-group {
+  display: grid;
+  gap: 10px;
+}
+
+.rating-group h3 {
+  margin: 8px 0 0;
+  color: var(--thai-blue);
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.rating-group-rows {
+  display: grid;
+  gap: 12px;
 }
 
 .rating-row {
@@ -941,12 +950,6 @@ main {
 .matrix-result-item > strong {
   color: var(--ink);
   font-size: 0.98rem;
-}
-
-.matrix-average {
-  color: var(--thai-blue);
-  font-size: 0.9rem;
-  font-weight: 900;
 }
 
 .sentiment-summary {

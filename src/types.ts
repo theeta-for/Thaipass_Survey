@@ -7,7 +7,6 @@ export type OptionGroup = {
 
 type QuestionBase = {
   id: string;
-  sectionTitle?: string;
   title: string;
   description?: string;
   required?: boolean;
@@ -32,17 +31,13 @@ export type MultipleChoiceQuestion = QuestionBase & {
   allowOther?: boolean;
 };
 
-export type RatingMatrixItem = {
-  id: string;
-  label: string;
-};
-
 export type RatingMatrixQuestion = QuestionBase & {
   type: "rating";
   scaleMinLabel: string;
   scaleMaxLabel: string;
   scaleOptions?: string[];
-  items: RatingMatrixItem[];
+  items: string[];
+  itemGroups?: OptionGroup[];
 };
 
 export type RatingScaleQuestion = QuestionBase & {

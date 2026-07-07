@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 type QuestionCardProps = {
   number?: number;
-  sectionTitle?: string;
   title: string;
   description?: string;
   instruction?: string;
@@ -43,7 +42,6 @@ function renderDescription(description: string) {
 
 export function QuestionCard({
   number,
-  sectionTitle,
   title,
   description,
   instruction,
@@ -56,7 +54,6 @@ export function QuestionCard({
       <div className="question-heading">
         {number ? <span className="question-number">{number}</span> : null}
         <div>
-          {sectionTitle ? <span className="question-section-title">{sectionTitle}</span> : null}
           <h2>{title}</h2>
           {instruction ? <p>{instruction}</p> : null}
         </div>

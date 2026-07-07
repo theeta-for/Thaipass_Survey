@@ -21,14 +21,11 @@ const RESULTS_AUTH_KEY = "thaipass-results-authenticated";
 const responseDetailFields = [
   { label: "Nationality", questionId: "nationality" },
   { label: "Thailand travel status", questionId: "visitStatus" },
-  { label: "Entry & arrival preparation", questionId: "entryArrivalPreparation" },
-  { label: "Trip readiness & local support", questionId: "tripReadinessLocalSupport" },
-  { label: "Biggest concerns", questionId: "travelConcerns" },
-  { label: "Helpful support", questionId: "supportNeeds" },
+  { label: "Preparation area ratings", questionId: "preparationAreas" },
   { label: "Decision factors", questionId: "decisionFactors" },
 ];
 
-function answerPreview(question: Question | undefined, answer: unknown) {
+function answerPreview(answer: unknown) {
   if (Array.isArray(answer)) {
     return answer.join(", ");
   }
@@ -37,10 +34,7 @@ function answerPreview(question: Question | undefined, answer: unknown) {
   }
   if (answer && typeof answer === "object") {
     return Object.entries(answer)
-      .map(([item, rating]) => {
-        const label = question?.type === "rating" ? question.items.find((ratingItem) => ratingItem.id === item)?.label : undefined;
-        return `${label ?? item}: ${rating}`;
-      })
+      .map(([item, rating]) => `${item}: ${rating}`)
       .join(", ");
   }
   return String(answer ?? "-");
@@ -53,7 +47,7 @@ function otherTextForQuestion(responses: SurveyResponse[], questionId: string) {
 }
 
 function answerWithOther(response: SurveyResponse, questionId: string) {
-  const answer = answerPreview(getQuestion(questionId), response.answers[questionId]);
+  const answer = answerPreview(response.answers[questionId]);
   const otherText = response.otherAnswers[questionId];
   return otherText?.trim() ? `${answer} (${otherText})` : answer;
 }
@@ -100,21 +94,12 @@ function getMatrixPercentages(question: Question, responses: SurveyResponse[]) {
 
   const options = question.scaleOptions ?? [1, 2, 3, 4, 5];
 
-  return question.items.map((item) => {
-    const values = responses
-      .map((response) => response.answers[question.id])
-      .filter((answer): answer is Record<string, string | number> => Boolean(answer) && typeof answer === "object" && !Array.isArray(answer))
-      .map((answer) => answer[item.id])
-      .filter((rating): rating is number => typeof rating === "number");
-    const average = values.length ? Number((values.reduce((sum, rating) => sum + rating, 0) / values.length).toFixed(1)) : undefined;
-
-    return {
-      item: item.label,
-      average,
-      summaries: options.map((option) => {
+  return question.items.map((item) => ({
+    item,
+    summaries: options.map((option) => {
       const count = responses.reduce((total, response) => {
         const answer = response.answers[question.id];
-        return total + (answer && typeof answer === "object" && !Array.isArray(answer) && answer[item.id] === option ? 1 : 0);
+        return total + (answer && typeof answer === "object" && !Array.isArray(answer) && answer[item] === option ? 1 : 0);
       }, 0);
 
       return {
@@ -122,9 +107,8 @@ function getMatrixPercentages(question: Question, responses: SurveyResponse[]) {
         count,
         percentage: responses.length ? Math.round((count / responses.length) * 100) : 0,
       };
-      }),
-    };
-  });
+    }),
+  }));
 }
 
 function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
@@ -235,8 +219,6 @@ export function ResultsPage() {
     "No, but I am planning to visit",
     "No, but I am interested in visiting",
   ]);
-  const entryDocsConcern = calculateMultipleAnswerShare(activeResponses, "travelConcerns", "Entry documents / arrival requirements");
-  const checklistSupport = calculateMultipleAnswerShare(activeResponses, "supportNeeds", "A pre-arrival checklist");
   const verifiedBadgeFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Official partner / verified badge");
   const customerSupportFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Customer support");
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
@@ -324,17 +306,6 @@ export function ResultsPage() {
                   <p>{mostCommonNationality ? `${mostCommonNationality.count} responses` : "No data yet"}</p>
                 </article>
                 <article className="metric-card">
-                  <span>Entry document concern</span>
-                  <strong>{entryDocsConcern.percentage}%</strong>
-                  <p>Selected entry documents / arrival requirements</p>
-                </article>
-                <article className="metric-card">
-                  <span>Checklist support</span>
-                  <strong>{checklistSupport.percentage}%</strong>
-                  <p>Selected a pre-arrival checklist</p>
-                  <p className="metric-insight">This points to trip preparation as a likely priority area.</p>
-                </article>
-                <article className="metric-card">
                   <span>Verified badge matters</span>
                   <strong>{verifiedBadgeFactor.percentage}%</strong>
                   <p>Selected official partner / verified badge</p>
@@ -352,10 +323,7 @@ export function ResultsPage() {
                     <article className="result-card" key={question.id}>
                       <div className="result-heading">
                         <span>Q{index + 1}</span>
-                        <div>
-                          {question.sectionTitle ? <span className="question-section-title">{question.sectionTitle}</span> : null}
-                          <h2>{question.title}</h2>
-                        </div>
+                        <h2>{question.title}</h2>
                       </div>
 
                       <div className="bar-list">
@@ -376,16 +344,9 @@ export function ResultsPage() {
 
                       {question.type === "rating" ? (
                         <div className="matrix-results">
-                          <p className="rating-scale-labels">
-                            <span>1 = {question.scaleMinLabel}</span>
-                            <span>5 = {question.scaleMaxLabel}</span>
-                          </p>
                           {getMatrixPercentages(question, activeResponses).map((itemSummary) => (
                             <div className="matrix-result-item" key={itemSummary.item}>
                               <strong>{itemSummary.item}</strong>
-                              <span className="matrix-average">
-                                Average: {itemSummary.average ? `${itemSummary.average}/5` : "No ratings yet"}
-                              </span>
                               <div className="bar-list">
                                 {itemSummary.summaries.map((summary) => (
                                   <div className="bar-row" key={`${itemSummary.item}-${summary.option}`}>
