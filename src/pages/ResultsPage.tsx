@@ -21,13 +21,14 @@ const RESULTS_AUTH_KEY = "thaipass-results-authenticated";
 const responseDetailFields = [
   { label: "Nationality", questionId: "nationality" },
   { label: "Thailand travel status", questionId: "visitStatus" },
-  { label: "Preparation area ratings", questionId: "preparationAreas" },
+  { label: "Entry & arrival preparation", questionId: "entryArrivalPreparation" },
+  { label: "Trip readiness & local support", questionId: "tripReadinessLocalSupport" },
   { label: "Biggest concerns", questionId: "travelConcerns" },
   { label: "Helpful support", questionId: "supportNeeds" },
   { label: "Decision factors", questionId: "decisionFactors" },
 ];
 
-function answerPreview(answer: unknown) {
+function answerPreview(question: Question | undefined, answer: unknown) {
   if (Array.isArray(answer)) {
     return answer.join(", ");
   }
@@ -36,7 +37,10 @@ function answerPreview(answer: unknown) {
   }
   if (answer && typeof answer === "object") {
     return Object.entries(answer)
-      .map(([item, rating]) => `${item}: ${rating}`)
+      .map(([item, rating]) => {
+        const label = question?.type === "rating" ? question.items.find((ratingItem) => ratingItem.id === item)?.label : undefined;
+        return `${label ?? item}: ${rating}`;
+      })
       .join(", ");
   }
   return String(answer ?? "-");
@@ -49,7 +53,7 @@ function otherTextForQuestion(responses: SurveyResponse[], questionId: string) {
 }
 
 function answerWithOther(response: SurveyResponse, questionId: string) {
-  const answer = answerPreview(response.answers[questionId]);
+  const answer = answerPreview(getQuestion(questionId), response.answers[questionId]);
   const otherText = response.otherAnswers[questionId];
   return otherText?.trim() ? `${answer} (${otherText})` : answer;
 }
@@ -96,12 +100,21 @@ function getMatrixPercentages(question: Question, responses: SurveyResponse[]) {
 
   const options = question.scaleOptions ?? [1, 2, 3, 4, 5];
 
-  return question.items.map((item) => ({
-    item,
-    summaries: options.map((option) => {
+  return question.items.map((item) => {
+    const values = responses
+      .map((response) => response.answers[question.id])
+      .filter((answer): answer is Record<string, string | number> => Boolean(answer) && typeof answer === "object" && !Array.isArray(answer))
+      .map((answer) => answer[item.id])
+      .filter((rating): rating is number => typeof rating === "number");
+    const average = values.length ? Number((values.reduce((sum, rating) => sum + rating, 0) / values.length).toFixed(1)) : undefined;
+
+    return {
+      item: item.label,
+      average,
+      summaries: options.map((option) => {
       const count = responses.reduce((total, response) => {
         const answer = response.answers[question.id];
-        return total + (answer && typeof answer === "object" && !Array.isArray(answer) && answer[item] === option ? 1 : 0);
+        return total + (answer && typeof answer === "object" && !Array.isArray(answer) && answer[item.id] === option ? 1 : 0);
       }, 0);
 
       return {
@@ -109,8 +122,9 @@ function getMatrixPercentages(question: Question, responses: SurveyResponse[]) {
         count,
         percentage: responses.length ? Math.round((count / responses.length) * 100) : 0,
       };
-    }),
-  }));
+      }),
+    };
+  });
 }
 
 function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
@@ -338,7 +352,10 @@ export function ResultsPage() {
                     <article className="result-card" key={question.id}>
                       <div className="result-heading">
                         <span>Q{index + 1}</span>
-                        <h2>{question.title}</h2>
+                        <div>
+                          {question.sectionTitle ? <span className="question-section-title">{question.sectionTitle}</span> : null}
+                          <h2>{question.title}</h2>
+                        </div>
                       </div>
 
                       <div className="bar-list">
@@ -359,9 +376,16 @@ export function ResultsPage() {
 
                       {question.type === "rating" ? (
                         <div className="matrix-results">
+                          <p className="rating-scale-labels">
+                            <span>1 = {question.scaleMinLabel}</span>
+                            <span>5 = {question.scaleMaxLabel}</span>
+                          </p>
                           {getMatrixPercentages(question, activeResponses).map((itemSummary) => (
                             <div className="matrix-result-item" key={itemSummary.item}>
                               <strong>{itemSummary.item}</strong>
+                              <span className="matrix-average">
+                                Average: {itemSummary.average ? `${itemSummary.average}/5` : "No ratings yet"}
+                              </span>
                               <div className="bar-list">
                                 {itemSummary.summaries.map((summary) => (
                                   <div className="bar-row" key={`${itemSummary.item}-${summary.option}`}>

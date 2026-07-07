@@ -1,5 +1,7 @@
+import type { RatingMatrixItem } from "../types";
+
 type RatingMatrixQuestionProps = {
-  items: string[];
+  items: RatingMatrixItem[];
   value: Record<string, string | number>;
   minLabel: string;
   maxLabel: string;
@@ -24,16 +26,16 @@ export function RatingMatrixQuestion({
         <span>{scaleOptions ? maxLabel : `5 = ${maxLabel}`}</span>
       </div>
       {items.map((item) => (
-        <div className="rating-row" key={item}>
-          <span className="rating-item">{item}</span>
-          <div className={`rating-options ${scaleOptions ? "has-text-options" : ""}`} role="radiogroup" aria-label={item}>
+        <div className="rating-row" key={item.id}>
+          <span className="rating-item">{item.label}</span>
+          <div className={`rating-options ${scaleOptions ? "has-text-options" : ""}`} role="radiogroup" aria-label={item.label}>
             {options.map((rating) => (
               <label key={rating}>
                 <input
                   type="radio"
-                  name={item}
-                  checked={value[item] === rating}
-                  onChange={() => onChange(item, rating)}
+                  name={item.id}
+                  checked={value[item.id] === rating}
+                  onChange={() => onChange(item.id, rating)}
                 />
                 <span>{rating}</span>
               </label>

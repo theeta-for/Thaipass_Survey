@@ -33,7 +33,7 @@ function hasAnswer(questionId: string, answers: SurveyAnswers) {
     return answer >= 1 && answer <= 5;
   }
   if (answer && typeof answer === "object") {
-    return question?.type === "rating" && question.items.every((item) => answer[item]);
+    return question?.type === "rating" && question.items.every((item) => answer[item.id]);
   }
   return typeof answer === "string" ? answer.trim().length > 0 : Boolean(answer);
 }
@@ -43,7 +43,7 @@ function validateAnswers(answers: SurveyAnswers): ValidationErrors {
     if (!isQuestionAnswered(question.id, answers)) {
       errors[question.id] =
         question.type === "rating"
-          ? "Please rate every service before submitting."
+          ? "Please rate every topic before submitting."
           : "Please select an answer before continuing.";
     }
     return errors;
@@ -53,7 +53,7 @@ function validateAnswers(answers: SurveyAnswers): ValidationErrors {
 function questionErrorMessage(questionId: string) {
   const question = surveyQuestions.find((item) => item.id === questionId);
   return question?.type === "rating"
-    ? "Please rate every service before continuing."
+    ? "Please rate every topic before continuing."
     : "Please select an answer before continuing.";
 }
 
@@ -88,6 +88,14 @@ export function SurveyPage() {
   }
 
   function goToQuestion(index: number) {
+    const targetQuestion = surveyQuestions[index];
+    if (targetQuestion) {
+      setErrors((current) => {
+        const next = { ...current };
+        delete next[targetQuestion.id];
+        return next;
+      });
+    }
     setCurrentQuestionIndex(index);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -196,6 +204,7 @@ export function SurveyPage() {
         <QuestionCard
           key={currentQuestion.id}
           number={currentQuestionIndex + 1}
+          sectionTitle={currentQuestion.sectionTitle}
           title={currentQuestion.title}
           description={currentQuestion.description}
           instruction={currentQuestion.type === "multiple" ? currentQuestion.instruction : undefined}
