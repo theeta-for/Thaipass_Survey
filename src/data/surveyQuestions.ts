@@ -137,6 +137,33 @@ export const surveyQuestions: Question[] = [
     showConceptMockup: true,
   },
   {
+    id: "conceptUsefulParts",
+    type: "multiple",
+    title: "Which part of the ThaiPass concept feels most useful?",
+    description: "Choose the parts that would make the biggest difference for your Thailand trip.",
+    instruction: "Select all that apply",
+    options: [
+      "Pre-arrival checklist",
+      "Travel documents in one place",
+      "Entry requirement guidance",
+      "Local tips and destination guidance",
+      "Emergency or support information",
+      "Personalized recommendations",
+      "Nothing feels useful",
+      "Other",
+    ],
+    allowOther: true,
+  },
+  {
+    id: "confusingParts",
+    type: "text",
+    title: "What feels unnecessary or confusing?",
+    description:
+      "Tell us if any part of the concept feels unclear, unnecessary, hard to trust, or not useful.",
+    placeholder: "Share anything that feels confusing or unnecessary",
+    required: false,
+  },
+  {
     id: "trustFactors",
     type: "multiple",
     title: "What would make you trust ThaiPass?",

@@ -46,6 +46,8 @@ const responseDetailFields = [
   { label: "Useful before arrival", questionId: "beforeArrivalFeatures" },
   { label: "Useful during trip", questionId: "duringTripFeatures" },
   { label: "Concept clarity score", questionId: "conceptClarityScore" },
+  { label: "Most useful concept parts", questionId: "conceptUsefulParts" },
+  { label: "Unnecessary or confusing parts", questionId: "confusingParts" },
   { label: "Trust factors", questionId: "trustFactors" },
   { label: "Preferred platform", questionId: "preferredPlatform" },
   { label: "Additional feedback", questionId: "additionalFeedback" },
