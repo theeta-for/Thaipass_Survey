@@ -46,6 +46,8 @@ const zhTranslations: Record<string, string> = {
     "在抵达其他国家之前，你是否曾提前支付过旅行服务？",
   "Before paying for a travel service in Thailand, what would help you feel confident enough to book?":
     "在支付泰国旅行服务前，哪些因素会让你更有信心预订？",
+  "Before booking a travel service in Thailand (such as a guided tour, airport transfer, SIM/eSIM, travel insurance, or attraction ticket) what would help you feel confident enough to pay?":
+    "在预订泰国旅行服务（例如导游团、机场接送、SIM/eSIM、旅行保险或景点门票）前，哪些因素会让你有足够信心付款？",
   "Select all that apply": "可多选",
   "Select up to 5": "最多选择 5 项",
   "Entry & Arrival Preparation": "入境与抵达准备",

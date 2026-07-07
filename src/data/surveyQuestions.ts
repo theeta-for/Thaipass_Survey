@@ -109,7 +109,8 @@ export const surveyQuestions: Question[] = [
   {
     id: "decisionFactors",
     type: "multiple",
-    title: "Before paying for a travel service in Thailand, what would help you feel confident enough to book?",
+    title:
+      "Before booking a travel service in Thailand (such as a guided tour, airport transfer, SIM/eSIM, travel insurance, or attraction ticket) what would help you feel confident enough to pay?",
     instruction: "Select up to 5",
     maxSelections: 5,
     options: [

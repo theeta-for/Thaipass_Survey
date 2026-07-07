@@ -90,14 +90,7 @@ export function SurveyPage() {
   }
 
   function goToQuestion(index: number) {
-    const targetQuestion = surveyQuestions[index];
-    if (targetQuestion) {
-      setErrors((current) => {
-        const next = { ...current };
-        delete next[targetQuestion.id];
-        return next;
-      });
-    }
+    setErrors({});
     setCurrentQuestionIndex(index);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
