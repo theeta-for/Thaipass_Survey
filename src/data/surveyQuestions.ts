@@ -1,14 +1,5 @@
 import type { Question } from "../types";
 
-const preparationScale = [
-  "Very easy",
-  "Somewhat easy",
-  "Neutral",
-  "Somewhat difficult",
-  "Very difficult",
-  "Not applicable / I don’t know",
-];
-
 export const surveyQuestions: Question[] = [
   {
     id: "nationality",
@@ -62,8 +53,7 @@ export const surveyQuestions: Question[] = [
     type: "rating",
     title: "Before traveling to Thailand, how easy or difficult is it to prepare for the following areas?",
     scaleMinLabel: "Very easy",
-    scaleMaxLabel: "Not applicable / I don’t know",
-    scaleOptions: preparationScale,
+    scaleMaxLabel: "Very difficult",
     items: [
       "Understanding entry requirements",
       "Preparing travel documents",
