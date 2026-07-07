@@ -30,6 +30,7 @@ const zhTranslations: Record<string, string> = {
   "Continue": "继续",
   "Submit response": "提交回答",
   "Submitting your response...": "正在提交回答...",
+  "We could not submit your response. Please try again.": "无法提交你的回答。请重试。",
   "Please select an answer before continuing.": "请先选择一个答案再继续。",
   "Please rate every topic before continuing.": "请为每个项目评分后再继续。",
   "Please rate every topic before submitting.": "请为每个项目评分后再提交。",

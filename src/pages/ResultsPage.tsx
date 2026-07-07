@@ -14,7 +14,7 @@ import {
   getMostCommonAnswer,
 } from "../utils/results";
 import { type Language, useLanguage } from "../utils/language";
-import { clearResponses, getResponses, restoreResponse, softDeleteResponse } from "../utils/storage";
+import { clearResponses, getResponses, loadResponses, restoreResponse, softDeleteResponse } from "../utils/storage";
 
 const RESULTS_PASSWORD = "Thaipass2026";
 
@@ -190,15 +190,39 @@ export function ResultsPage() {
   const [selectedNationality, setSelectedNationality] = useState("all");
   const [selectedResponseId, setSelectedResponseId] = useState<string | undefined>();
   const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
+  const [isLoadingResponses, setIsLoadingResponses] = useState(false);
+  const [responseError, setResponseError] = useState("");
 
   useEffect(() => {
-    function syncResponses() {
-      setResponses(getResponses());
+    let isActive = true;
+
+    async function syncResponses() {
+      setIsLoadingResponses(true);
+      setResponseError("");
+
+      try {
+        const nextResponses = await loadResponses();
+        if (isActive) {
+          setResponses(nextResponses);
+        }
+      } catch {
+        if (isActive) {
+          setResponses(getResponses());
+          setResponseError("Could not load shared responses. Showing saved responses from this browser.");
+        }
+      } finally {
+        if (isActive) {
+          setIsLoadingResponses(false);
+        }
+      }
     }
 
     window.addEventListener("storage", syncResponses);
     window.addEventListener("thaipass-survey-updated", syncResponses);
+    syncResponses();
+
     return () => {
+      isActive = false;
       window.removeEventListener("storage", syncResponses);
       window.removeEventListener("thaipass-survey-updated", syncResponses);
     };
@@ -237,11 +261,39 @@ export function ResultsPage() {
   const customerSupportFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Customer support contact");
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
 
-  function handleClearResponses() {
-    clearResponses();
-    setSelectedResponseId(undefined);
-    setSelectedNationality("all");
-    setIsClearConfirmOpen(false);
+  async function refreshResponses() {
+    const nextResponses = await loadResponses();
+    setResponses(nextResponses);
+  }
+
+  async function handleClearResponses() {
+    try {
+      await clearResponses();
+      await refreshResponses();
+      setSelectedResponseId(undefined);
+      setSelectedNationality("all");
+      setIsClearConfirmOpen(false);
+    } catch {
+      setResponseError("Could not update shared responses. Please try again.");
+    }
+  }
+
+  async function handleSoftDeleteResponse(responseId: string) {
+    try {
+      await softDeleteResponse(responseId);
+      await refreshResponses();
+    } catch {
+      setResponseError("Could not update shared responses. Please try again.");
+    }
+  }
+
+  async function handleRestoreResponse(responseId: string) {
+    try {
+      await restoreResponse(responseId);
+      await refreshResponses();
+    } catch {
+      setResponseError("Could not update shared responses. Please try again.");
+    }
   }
 
   if (!isAuthenticated) {
@@ -284,6 +336,8 @@ export function ResultsPage() {
           <strong>{lastUpdated}</strong>
         </div>
       </section>
+      {isLoadingResponses ? <p className="results-status">Loading responses...</p> : null}
+      {responseError ? <p className="field-error">{responseError}</p> : null}
 
       <div className="results-view-tabs" aria-label="Results views">
         <button
@@ -466,7 +520,7 @@ export function ResultsPage() {
                           {selectedResponse.deletedAt ? (
                             <>
                               <span className="status-pill is-deleted">Deleted {formatDateTime(selectedResponse.deletedAt)}</span>
-                              <button className="table-action-button" type="button" onClick={() => restoreResponse(selectedResponse.id)}>
+                              <button className="table-action-button" type="button" onClick={() => handleRestoreResponse(selectedResponse.id)}>
                                 Restore
                               </button>
                             </>
@@ -476,7 +530,7 @@ export function ResultsPage() {
                               <button
                                 className="table-action-button is-danger"
                                 type="button"
-                                onClick={() => softDeleteResponse(selectedResponse.id)}
+                                onClick={() => handleSoftDeleteResponse(selectedResponse.id)}
                               >
                                 Delete
                               </button>

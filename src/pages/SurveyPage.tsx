@@ -63,6 +63,7 @@ export function SurveyPage() {
   const [answers, setAnswers] = useState<SurveyAnswers>({});
   const [otherAnswers, setOtherAnswers] = useState<OtherAnswers>({});
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -78,6 +79,7 @@ export function SurveyPage() {
 
   function updateAnswer(questionId: string, value: SurveyAnswers[string]) {
     setAnswers((current) => ({ ...current, [questionId]: value }));
+    setSubmitError("");
     setErrors((current) => {
       const next = { ...current };
       delete next[questionId];
@@ -111,8 +113,9 @@ export function SurveyPage() {
     goToQuestion(Math.max(currentQuestionIndex - 1, 0));
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitError("");
     const validationErrors = validateAnswers(answers);
     setErrors(validationErrors);
 
@@ -132,12 +135,16 @@ export function SurveyPage() {
       otherAnswers,
     };
 
-    window.setTimeout(() => {
-      saveResponse(response);
+    try {
+      await new Promise((resolve) => window.setTimeout(resolve, 450));
+      await saveResponse(response);
       setIsSubmitting(false);
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 450);
+    } catch {
+      setIsSubmitting(false);
+      setSubmitError("We could not submit your response. Please try again.");
+    }
   }
 
   if (submitted) {
@@ -300,6 +307,7 @@ export function SurveyPage() {
         </QuestionCard>
 
         <div className="step-panel step-panel-actions-only">
+          {submitError ? <p className="field-error">{t(submitError)}</p> : null}
           <div className="step-actions">
             <button className="ghost-button" type="button" onClick={handleBack} disabled={isFirstQuestion}>
               {t("Back")}
