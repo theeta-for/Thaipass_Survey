@@ -199,9 +199,6 @@ main {
 }
 
 .progress-card {
-  position: sticky;
-  top: 67px;
-  z-index: 4;
   padding: 16px 18px 18px;
 }
 
@@ -269,6 +266,7 @@ main {
 .concept-statement p {
   margin: 0;
   color: var(--muted);
+  font-size: clamp(0.875rem, 1.4vw, 1rem);
   line-height: 1.6;
 }
 
@@ -278,6 +276,7 @@ main {
   margin: 0;
   padding-left: 20px;
   color: var(--muted);
+  font-size: clamp(0.875rem, 1.4vw, 1rem);
   line-height: 1.55;
 }
 
@@ -1283,10 +1282,6 @@ main {
     grid-template-columns: 1fr;
   }
 
-  .progress-card {
-    top: 66px;
-  }
-
   .step-actions {
     justify-content: space-between;
   }
@@ -1365,10 +1360,6 @@ main {
   .text-field,
   .other-field {
     max-width: none;
-  }
-
-  .progress-card {
-    top: 116px;
   }
 
   .primary-button,

@@ -4,11 +4,10 @@ import { surveyQuestions } from "../data/surveyQuestions";
 import type { Question, SurveyResponse } from "../types";
 import { exportToPDF } from "../utils/pdf";
 import {
-  calculateAverageNumericScore,
+  calculateAnswerShare,
+  calculateAverageScore,
   calculateMultipleAnswerShare,
   calculatePositiveNeutralNegativeSummary,
-  calculateScaleShare,
-  calculateScalePercentages,
   calculateSingleChoicePercentages,
   calculateMultipleChoicePercentages,
   formatDate,
@@ -30,27 +29,45 @@ const sentimentConfigs: Record<
     negative: string[];
   }
 > = {
-  preferredPlatform: {
-    title: "Platform preference",
-    positive: ["Website", "Mobile app", "Existing travel platform"],
+  conceptClarity: {
+    title: "Concept clarity",
+    positive: ["Very clear", "Somewhat clear"],
+    neutral: ["Neutral"],
+    negative: ["Not very clear", "Not clear at all"],
+  },
+  travelAssistantUsefulness: {
+    title: "Usefulness",
+    positive: ["Very useful", "Somewhat useful"],
+    neutral: ["Neutral"],
+    negative: ["Not very useful", "Not useful at all"],
+  },
+  downloadLikelihood: {
+    title: "Download intent",
+    positive: ["Very likely", "Somewhat likely"],
     neutral: ["Not sure"],
-    negative: [],
+    negative: ["Somewhat unlikely", "Very unlikely"],
+  },
+  travelComparison: {
+    title: "Compared to current travel",
+    positive: ["Much better", "Somewhat better"],
+    neutral: ["About the same", "I’m not sure"],
+    negative: ["Worse"],
   },
 };
 
 const responseDetailFields = [
-  { label: "Country", questionId: "nationality" },
-  { label: "Travel experience", questionId: "visitStatus" },
-  { label: "Most stressful preparation", questionId: "stressfulPreparation" },
-  { label: "Usefulness score", questionId: "usefulnessScore" },
-  { label: "Useful before arrival", questionId: "beforeArrivalFeatures" },
-  { label: "Useful during trip", questionId: "duringTripFeatures" },
-  { label: "Concept clarity score", questionId: "conceptClarityScore" },
-  { label: "Most useful concept parts", questionId: "conceptUsefulParts" },
-  { label: "Unnecessary or confusing parts", questionId: "confusingParts" },
-  { label: "Trust factors", questionId: "trustFactors" },
-  { label: "Preferred platform", questionId: "preferredPlatform" },
-  { label: "Additional feedback", questionId: "additionalFeedback" },
+  { label: "Nationality", questionId: "nationality" },
+  { label: "Thailand travel status", questionId: "visitStatus" },
+  { label: "Preparation difficulty", questionId: "preparationDifficulty" },
+  { label: "Biggest concerns", questionId: "travelConcerns" },
+  { label: "Concept clarity", questionId: "conceptClarity" },
+  { label: "Best matching description", questionId: "conceptDescription" },
+  { label: "Usefulness", questionId: "travelAssistantUsefulness" },
+  { label: "Most valuable concept parts", questionId: "valuableConceptParts" },
+  { label: "Download likelihood", questionId: "downloadLikelihood" },
+  { label: "Compared to current travel", questionId: "travelComparison" },
+  { label: "Download / not download reason", questionId: "downloadReason" },
+  { label: "Trust factors", questionId: "trustSignals" },
 ];
 
 function answerPreview(answer: unknown) {
@@ -111,9 +128,6 @@ function getPercentages(question: Question, responses: SurveyResponse[]) {
   }
   if (question.type === "multiple") {
     return calculateMultipleChoicePercentages(question, responses);
-  }
-  if (question.type === "scale") {
-    return calculateScalePercentages(question, responses);
   }
   return [];
 }
@@ -222,11 +236,18 @@ export function ResultsPage() {
   const selectedResponse = filteredResponses.find((response) => response.id === selectedResponseId) ?? filteredResponses[0];
 
   const mostCommonNationality = getMostCommonAnswer(activeResponses, "nationality");
-  const usefulnessAverage = calculateAverageNumericScore(activeResponses, "usefulnessScore");
-  const usefulShare = calculateScaleShare(activeResponses, "usefulnessScore", 4);
-  const clarityShare = calculateScaleShare(activeResponses, "conceptClarityScore", 4);
-  const checklistShare = calculateMultipleAnswerShare(activeResponses, "beforeArrivalFeatures", "Pre-arrival checklist");
-  const entryStressShare = calculateMultipleAnswerShare(activeResponses, "stressfulPreparation", "Understanding entry requirements");
+  const conceptClarityAverage = calculateAverageScore(activeResponses, "conceptClarity", {
+    "Very clear": 5,
+    "Somewhat clear": 4,
+    Neutral: 3,
+    "Not very clear": 2,
+    "Not clear at all": 1,
+  });
+  const usefulShare = calculateAnswerShare(activeResponses, "travelAssistantUsefulness", ["Very useful", "Somewhat useful"]);
+  const downloadIntent = calculateAnswerShare(activeResponses, "downloadLikelihood", ["Very likely", "Somewhat likely"]);
+  const betterThanCurrent = calculateAnswerShare(activeResponses, "travelComparison", ["Much better", "Somewhat better"]);
+  const entryDocsConcern = calculateMultipleAnswerShare(activeResponses, "travelConcerns", "Entry documents / arrival requirements");
+  const tripChecklistValue = calculateMultipleAnswerShare(activeResponses, "valuableConceptParts", "Having a step-by-step trip checklist");
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
 
   if (!isAuthenticated) {
@@ -277,9 +298,9 @@ export function ResultsPage() {
 
       <section className="results-filter-card" aria-label="Results filters">
         <label>
-          <span>Filter by country</span>
+          <span>Filter by nationality</span>
           <select value={selectedNationality} onChange={(event) => setSelectedNationality(event.target.value)}>
-            <option value="all">All countries</option>
+            <option value="all">All nationalities</option>
             {nationalityOptions.map((nationality) => (
               <option key={nationality} value={nationality}>
                 {nationality}
@@ -303,33 +324,38 @@ export function ResultsPage() {
                 <article className="metric-card">
                   <span>ThaiPass usefulness</span>
                   <strong>{usefulShare.percentage}%</strong>
-                  <p>Rated 4 or 5 out of 5</p>
+                  <p>Very useful or somewhat useful</p>
                   <p className="metric-insight">This suggests whether the core travel assistant concept has strong potential.</p>
                 </article>
                 <article className="metric-card">
-                  <span>Most common country</span>
+                  <span>Most common nationality</span>
                   <strong>{mostCommonNationality?.answer ?? "N/A"}</strong>
                   <p>{mostCommonNationality ? `${mostCommonNationality.count} responses` : "No data yet"}</p>
                 </article>
                 <article className="metric-card">
-                  <span>Average usefulness score</span>
-                  <strong>{usefulnessAverage ? `${usefulnessAverage}/5` : "N/A"}</strong>
+                  <span>Average concept clarity</span>
+                  <strong>{conceptClarityAverage ? `${conceptClarityAverage}/5` : "N/A"}</strong>
                 </article>
                 <article className="metric-card">
-                  <span>Value clarity</span>
-                  <strong>{clarityShare.percentage}%</strong>
-                  <p>Rated 4 or 5 after seeing the concept</p>
+                  <span>Download intent</span>
+                  <strong>{downloadIntent.percentage}%</strong>
+                  <p>Very likely or somewhat likely</p>
                 </article>
                 <article className="metric-card">
-                  <span>Pre-arrival checklist</span>
-                  <strong>{checklistShare.percentage}%</strong>
-                  <p>Selected as a useful before-arrival feature</p>
+                  <span>ThaiPass feels better</span>
+                  <strong>{betterThanCurrent.percentage}%</strong>
+                  <p>Much better or somewhat better</p>
+                </article>
+                <article className="metric-card">
+                  <span>Entry document concern</span>
+                  <strong>{entryDocsConcern.percentage}%</strong>
+                  <p>Selected entry documents / arrival requirements</p>
+                </article>
+                <article className="metric-card">
+                  <span>Checklist value</span>
+                  <strong>{tripChecklistValue.percentage}%</strong>
+                  <p>Selected step-by-step trip checklist</p>
                   <p className="metric-insight">This points to trip preparation as a likely priority area.</p>
-                </article>
-                <article className="metric-card">
-                  <span>Entry requirements stress</span>
-                  <strong>{entryStressShare.percentage}%</strong>
-                  <p>Selected as a stressful preparation area</p>
                 </article>
               </section>
 

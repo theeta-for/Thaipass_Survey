@@ -32,8 +32,7 @@ function ConceptMockup() {
         </div>
       </div>
       <p>
-        This is a neutral placeholder for the idea. Please focus on whether the features feel useful,
-        clear, and trustworthy.
+        This is an early concept mockup. Please answer based on the app idea, not the visual design.
       </p>
     </div>
   );
