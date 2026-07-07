@@ -5,9 +5,7 @@ import type { Question, SurveyResponse } from "../types";
 import { exportToPDF } from "../utils/pdf";
 import {
   calculateAnswerShare,
-  calculateAverageScore,
   calculateMultipleAnswerShare,
-  calculatePositiveNeutralNegativeSummary,
   calculateSingleChoicePercentages,
   calculateMultipleChoicePercentages,
   formatDate,
@@ -20,54 +18,13 @@ import { getResponses, restoreResponse, softDeleteResponse } from "../utils/stor
 const RESULTS_PASSWORD = "Thaipass2026";
 const RESULTS_AUTH_KEY = "thaipass-results-authenticated";
 
-const sentimentConfigs: Record<
-  string,
-  {
-    title: string;
-    positive: string[];
-    neutral: string[];
-    negative: string[];
-  }
-> = {
-  conceptClarity: {
-    title: "Concept clarity",
-    positive: ["Very clear", "Somewhat clear"],
-    neutral: ["Neutral"],
-    negative: ["Not very clear", "Not clear at all"],
-  },
-  travelAssistantUsefulness: {
-    title: "Usefulness",
-    positive: ["Very useful", "Somewhat useful"],
-    neutral: ["Neutral"],
-    negative: ["Not very useful", "Not useful at all"],
-  },
-  downloadLikelihood: {
-    title: "Download intent",
-    positive: ["Very likely", "Somewhat likely"],
-    neutral: ["Not sure"],
-    negative: ["Somewhat unlikely", "Very unlikely"],
-  },
-  travelComparison: {
-    title: "Compared to current travel",
-    positive: ["Much better", "Somewhat better"],
-    neutral: ["About the same", "I’m not sure"],
-    negative: ["Worse"],
-  },
-};
-
 const responseDetailFields = [
   { label: "Nationality", questionId: "nationality" },
   { label: "Thailand travel status", questionId: "visitStatus" },
-  { label: "Preparation difficulty", questionId: "preparationDifficulty" },
+  { label: "Preparation area ratings", questionId: "preparationAreas" },
   { label: "Biggest concerns", questionId: "travelConcerns" },
-  { label: "Concept clarity", questionId: "conceptClarity" },
-  { label: "Best matching description", questionId: "conceptDescription" },
-  { label: "Usefulness", questionId: "travelAssistantUsefulness" },
-  { label: "Most valuable concept parts", questionId: "valuableConceptParts" },
-  { label: "Download likelihood", questionId: "downloadLikelihood" },
-  { label: "Compared to current travel", questionId: "travelComparison" },
-  { label: "Download / not download reason", questionId: "downloadReason" },
-  { label: "Trust factors", questionId: "trustSignals" },
+  { label: "Helpful support", questionId: "supportNeeds" },
+  { label: "Decision factors", questionId: "decisionFactors" },
 ];
 
 function answerPreview(answer: unknown) {
@@ -130,6 +87,30 @@ function getPercentages(question: Question, responses: SurveyResponse[]) {
     return calculateMultipleChoicePercentages(question, responses);
   }
   return [];
+}
+
+function getMatrixPercentages(question: Question, responses: SurveyResponse[]) {
+  if (question.type !== "rating") {
+    return [];
+  }
+
+  const options = question.scaleOptions ?? [1, 2, 3, 4, 5];
+
+  return question.items.map((item) => ({
+    item,
+    summaries: options.map((option) => {
+      const count = responses.reduce((total, response) => {
+        const answer = response.answers[question.id];
+        return total + (answer && typeof answer === "object" && !Array.isArray(answer) && answer[item] === option ? 1 : 0);
+      }, 0);
+
+      return {
+        option: String(option),
+        count,
+        percentage: responses.length ? Math.round((count / responses.length) * 100) : 0,
+      };
+    }),
+  }));
 }
 
 function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
@@ -236,18 +217,14 @@ export function ResultsPage() {
   const selectedResponse = filteredResponses.find((response) => response.id === selectedResponseId) ?? filteredResponses[0];
 
   const mostCommonNationality = getMostCommonAnswer(activeResponses, "nationality");
-  const conceptClarityAverage = calculateAverageScore(activeResponses, "conceptClarity", {
-    "Very clear": 5,
-    "Somewhat clear": 4,
-    Neutral: 3,
-    "Not very clear": 2,
-    "Not clear at all": 1,
-  });
-  const usefulShare = calculateAnswerShare(activeResponses, "travelAssistantUsefulness", ["Very useful", "Somewhat useful"]);
-  const downloadIntent = calculateAnswerShare(activeResponses, "downloadLikelihood", ["Very likely", "Somewhat likely"]);
-  const betterThanCurrent = calculateAnswerShare(activeResponses, "travelComparison", ["Much better", "Somewhat better"]);
+  const planningInterest = calculateAnswerShare(activeResponses, "visitStatus", [
+    "No, but I am planning to visit",
+    "No, but I am interested in visiting",
+  ]);
   const entryDocsConcern = calculateMultipleAnswerShare(activeResponses, "travelConcerns", "Entry documents / arrival requirements");
-  const tripChecklistValue = calculateMultipleAnswerShare(activeResponses, "valuableConceptParts", "Having a step-by-step trip checklist");
+  const checklistSupport = calculateMultipleAnswerShare(activeResponses, "supportNeeds", "A pre-arrival checklist");
+  const verifiedBadgeFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Official partner / verified badge");
+  const customerSupportFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Customer support");
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
 
   if (!isAuthenticated) {
@@ -322,10 +299,10 @@ export function ResultsPage() {
             <>
               <section className="metrics-grid overview-grid">
                 <article className="metric-card">
-                  <span>ThaiPass usefulness</span>
-                  <strong>{usefulShare.percentage}%</strong>
-                  <p>Very useful or somewhat useful</p>
-                  <p className="metric-insight">This suggests whether the core travel assistant concept has strong potential.</p>
+                  <span>Planning or interested</span>
+                  <strong>{planningInterest.percentage}%</strong>
+                  <p>Planning to visit or interested in visiting</p>
+                  <p className="metric-insight">This helps show whether respondents are close to the Thailand travel moment.</p>
                 </article>
                 <article className="metric-card">
                   <span>Most common nationality</span>
@@ -333,71 +310,36 @@ export function ResultsPage() {
                   <p>{mostCommonNationality ? `${mostCommonNationality.count} responses` : "No data yet"}</p>
                 </article>
                 <article className="metric-card">
-                  <span>Average concept clarity</span>
-                  <strong>{conceptClarityAverage ? `${conceptClarityAverage}/5` : "N/A"}</strong>
-                </article>
-                <article className="metric-card">
-                  <span>Download intent</span>
-                  <strong>{downloadIntent.percentage}%</strong>
-                  <p>Very likely or somewhat likely</p>
-                </article>
-                <article className="metric-card">
-                  <span>ThaiPass feels better</span>
-                  <strong>{betterThanCurrent.percentage}%</strong>
-                  <p>Much better or somewhat better</p>
-                </article>
-                <article className="metric-card">
                   <span>Entry document concern</span>
                   <strong>{entryDocsConcern.percentage}%</strong>
                   <p>Selected entry documents / arrival requirements</p>
                 </article>
                 <article className="metric-card">
-                  <span>Checklist value</span>
-                  <strong>{tripChecklistValue.percentage}%</strong>
-                  <p>Selected step-by-step trip checklist</p>
+                  <span>Checklist support</span>
+                  <strong>{checklistSupport.percentage}%</strong>
+                  <p>Selected a pre-arrival checklist</p>
                   <p className="metric-insight">This points to trip preparation as a likely priority area.</p>
+                </article>
+                <article className="metric-card">
+                  <span>Verified badge matters</span>
+                  <strong>{verifiedBadgeFactor.percentage}%</strong>
+                  <p>Selected official partner / verified badge</p>
+                </article>
+                <article className="metric-card">
+                  <span>Customer support matters</span>
+                  <strong>{customerSupportFactor.percentage}%</strong>
+                  <p>Selected customer support</p>
                 </article>
               </section>
 
               <section className="results-grid">
                 {surveyQuestions.map((question, index) => {
-                  const sentimentConfig = sentimentConfigs[question.id];
-                  const sentiment = sentimentConfig
-                    ? calculatePositiveNeutralNegativeSummary(
-                        question.id,
-                        activeResponses,
-                        sentimentConfig.positive,
-                        sentimentConfig.neutral,
-                        sentimentConfig.negative,
-                      )
-                    : undefined;
-
                   return (
                     <article className="result-card" key={question.id}>
                       <div className="result-heading">
                         <span>Q{index + 1}</span>
                         <h2>{question.title}</h2>
                       </div>
-
-                      {sentiment ? (
-                        <div className="sentiment-summary">
-                          <div>
-                            <span>Positive</span>
-                            <strong>{sentiment.positivePercentage}%</strong>
-                            <small>{sentiment.positive} responses</small>
-                          </div>
-                          <div>
-                            <span>Neutral</span>
-                            <strong>{sentiment.neutralPercentage}%</strong>
-                            <small>{sentiment.neutral} responses</small>
-                          </div>
-                          <div>
-                            <span>Negative</span>
-                            <strong>{sentiment.negativePercentage}%</strong>
-                            <small>{sentiment.negative} responses</small>
-                          </div>
-                        </div>
-                      ) : null}
 
                       <div className="bar-list">
                         {getPercentages(question, activeResponses).map((summary) => (
@@ -414,6 +356,31 @@ export function ResultsPage() {
                           </div>
                         ))}
                       </div>
+
+                      {question.type === "rating" ? (
+                        <div className="matrix-results">
+                          {getMatrixPercentages(question, activeResponses).map((itemSummary) => (
+                            <div className="matrix-result-item" key={itemSummary.item}>
+                              <strong>{itemSummary.item}</strong>
+                              <div className="bar-list">
+                                {itemSummary.summaries.map((summary) => (
+                                  <div className="bar-row" key={`${itemSummary.item}-${summary.option}`}>
+                                    <div className="bar-row-label">
+                                      <span>{summary.option}</span>
+                                      <strong>
+                                        {summary.count} responses ({summary.percentage}%)
+                                      </strong>
+                                    </div>
+                                    <div className="bar-track">
+                                      <span style={{ width: `${summary.percentage}%` }} />
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : null}
 
                       {question.type === "text" && textForQuestion(activeResponses, question.id).length ? (
                         <div className="other-summary">

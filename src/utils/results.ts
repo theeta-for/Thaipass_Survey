@@ -124,7 +124,7 @@ export function summarizeRatingQuestion(question: Question, responses: SurveyRes
   return question.items.map<RatingSummary>((item) => {
     const values = responses
       .map((response) => response.answers[question.id])
-      .filter((answer): answer is Record<string, number> => Boolean(answer) && typeof answer === "object" && !Array.isArray(answer))
+      .filter((answer): answer is Record<string, string | number> => Boolean(answer) && typeof answer === "object" && !Array.isArray(answer))
       .map((answer) => answer[item])
       .filter((rating): rating is number => typeof rating === "number");
 

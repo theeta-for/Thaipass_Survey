@@ -35,6 +35,7 @@ export type RatingMatrixQuestion = QuestionBase & {
   type: "rating";
   scaleMinLabel: string;
   scaleMaxLabel: string;
+  scaleOptions?: string[];
   items: string[];
 };
 
@@ -56,7 +57,7 @@ export type Question =
   | RatingScaleQuestion
   | TextQuestion;
 
-export type SurveyAnswers = Record<string, string | string[] | number | Record<string, number>>;
+export type SurveyAnswers = Record<string, string | string[] | number | Record<string, string | number>>;
 
 export type OtherAnswers = Record<string, string>;
 

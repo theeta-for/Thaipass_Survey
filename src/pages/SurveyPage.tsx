@@ -255,9 +255,10 @@ export function SurveyPage() {
               items={currentQuestion.items}
               minLabel={currentQuestion.scaleMinLabel}
               maxLabel={currentQuestion.scaleMaxLabel}
-              value={(answers[currentQuestion.id] as Record<string, number> | undefined) ?? {}}
+              scaleOptions={currentQuestion.scaleOptions}
+              value={(answers[currentQuestion.id] as Record<string, string | number> | undefined) ?? {}}
               onChange={(item, rating) => {
-                const current = (answers[currentQuestion.id] as Record<string, number> | undefined) ?? {};
+                const current = (answers[currentQuestion.id] as Record<string, string | number> | undefined) ?? {};
                 updateAnswer(currentQuestion.id, { ...current, [item]: rating });
               }}
             />
