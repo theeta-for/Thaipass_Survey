@@ -490,13 +490,13 @@ main {
 
 .rating-group {
   display: grid;
-  gap: 10px;
+  gap: 14px;
 }
 
 .rating-group h3 {
-  margin: 8px 0 0;
+  margin: 16px 0 4px;
   color: var(--thai-blue);
-  font-size: 1rem;
+  font-size: 18px;
   font-weight: 900;
 }
 
