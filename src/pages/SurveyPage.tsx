@@ -1,6 +1,5 @@
 import { FormEvent, useMemo, useState } from "react";
 import { MultipleChoiceQuestion } from "../components/MultipleChoiceQuestion";
-import { ProgressBar } from "../components/ProgressBar";
 import { QuestionCard } from "../components/QuestionCard";
 import { RatingMatrixQuestion } from "../components/RatingMatrixQuestion";
 import { RatingScaleQuestion } from "../components/RatingScaleQuestion";
@@ -164,26 +163,35 @@ export function SurveyPage() {
       description="Help us validate ThaiPass, a Thailand Travel Assistant concept for international travelers. This survey takes around 2-3 minutes and does not require personal data."
     >
       <form className="survey-form" onSubmit={handleSubmit} noValidate>
-        <ProgressBar answered={answeredCount} current={currentQuestionIndex + 1} total={surveyQuestions.length} />
+        <section className="progress-card" aria-label={`Survey progress ${Math.round(((currentQuestionIndex + 1) / surveyQuestions.length) * 100)}%`}>
+          <div className="progress-copy">
+            <span>Step {currentQuestionIndex + 1} of {surveyQuestions.length}</span>
+            <strong>
+              {answeredCount} of {surveyQuestions.length} answered
+            </strong>
+          </div>
+          <div className="progress-track">
+            <span style={{ width: `${Math.round(((currentQuestionIndex + 1) / surveyQuestions.length) * 100)}%` }} />
+          </div>
+          <div className="question-tabs" aria-label="Survey questions">
+            {surveyQuestions.map((question, index) => {
+              const isActive = index === currentQuestionIndex;
+              const isAnswered = hasAnswer(question.id, answers);
 
-        <div className="question-tabs" aria-label="Survey questions">
-          {surveyQuestions.map((question, index) => {
-            const isActive = index === currentQuestionIndex;
-            const isAnswered = hasAnswer(question.id, answers);
-
-            return (
-              <button
-                className={`question-tab ${isActive ? "is-active" : ""} ${isAnswered ? "is-complete" : ""}`}
-                key={question.id}
-                type="button"
-                onClick={() => goToQuestion(index)}
-                aria-current={isActive ? "step" : undefined}
-              >
-                {index + 1}
-              </button>
-            );
-          })}
-        </div>
+              return (
+                <button
+                  className={`question-tab ${isActive ? "is-active" : ""} ${isAnswered ? "is-complete" : ""}`}
+                  key={question.id}
+                  type="button"
+                  onClick={() => goToQuestion(index)}
+                  aria-current={isActive ? "step" : undefined}
+                >
+                  {index + 1}
+                </button>
+              );
+            })}
+          </div>
+        </section>
 
         <QuestionCard
           key={currentQuestion.id}
