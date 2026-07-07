@@ -2,10 +2,11 @@ type SingleChoiceQuestionProps = {
   name: string;
   options: string[];
   value?: string;
+  getOptionLabel?: (option: string) => string;
   onChange: (value: string) => void;
 };
 
-export function SingleChoiceQuestion({ name, options, value, onChange }: SingleChoiceQuestionProps) {
+export function SingleChoiceQuestion({ name, options, value, getOptionLabel = (option) => option, onChange }: SingleChoiceQuestionProps) {
   return (
     <div className="option-grid">
       {options.map((option) => {
@@ -19,7 +20,7 @@ export function SingleChoiceQuestion({ name, options, value, onChange }: SingleC
               checked={checked}
               onChange={() => onChange(option)}
             />
-            <span>{option}</span>
+            <span>{getOptionLabel(option)}</span>
             {checked ? <i aria-hidden="true" /> : null}
           </label>
         );

@@ -4,6 +4,9 @@ type MultipleChoiceQuestionProps = {
   value: string[];
   maxSelections?: number;
   otherValue?: string;
+  getOptionLabel?: (option: string) => string;
+  otherLabel?: string;
+  otherPlaceholder?: string;
   onChange: (value: string[]) => void;
   onOtherChange?: (value: string) => void;
 };
@@ -14,6 +17,9 @@ export function MultipleChoiceQuestion({
   value,
   maxSelections,
   otherValue = "",
+  getOptionLabel = (option) => option,
+  otherLabel = "Please tell us more",
+  otherPlaceholder = "Type your answer",
   onChange,
   onOtherChange,
 }: MultipleChoiceQuestionProps) {
@@ -49,7 +55,7 @@ export function MultipleChoiceQuestion({
                 disabled={disabled}
                 onChange={() => toggleOption(option)}
               />
-              <span>{option}</span>
+              <span>{getOptionLabel(option)}</span>
               {checked ? <i aria-hidden="true" /> : null}
             </label>
           );
@@ -57,12 +63,12 @@ export function MultipleChoiceQuestion({
       </div>
       {showOtherInput ? (
         <label className="other-field">
-          <span>Please tell us more</span>
+          <span>{otherLabel}</span>
           <input
             type="text"
             value={otherValue}
             onChange={(event) => onOtherChange(event.target.value)}
-            placeholder="Type your answer"
+            placeholder={otherPlaceholder}
           />
         </label>
       ) : null}

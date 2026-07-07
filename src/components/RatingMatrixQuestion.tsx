@@ -7,6 +7,7 @@ type RatingMatrixQuestionProps = {
   maxLabel: string;
   scaleOptions?: string[];
   itemGroups?: OptionGroup[];
+  getLabel?: (text: string) => string;
   onChange: (item: string, rating: string | number) => void;
 };
 
@@ -15,18 +16,20 @@ function RatingRow({
   options,
   value,
   hasTextOptions,
+  getLabel,
   onChange,
 }: {
   item: string;
   options: Array<string | number>;
   value: Record<string, string | number>;
   hasTextOptions: boolean;
+  getLabel: (text: string) => string;
   onChange: (item: string, rating: string | number) => void;
 }) {
   return (
     <div className="rating-row">
-      <span className="rating-item">{item}</span>
-      <div className={`rating-options ${hasTextOptions ? "has-text-options" : ""}`} role="radiogroup" aria-label={item}>
+      <span className="rating-item">{getLabel(item)}</span>
+      <div className={`rating-options ${hasTextOptions ? "has-text-options" : ""}`} role="radiogroup" aria-label={getLabel(item)}>
         {options.map((rating) => (
           <label key={rating}>
             <input
@@ -50,6 +53,7 @@ export function RatingMatrixQuestion({
   maxLabel,
   scaleOptions,
   itemGroups,
+  getLabel = (text) => text,
   onChange,
 }: RatingMatrixQuestionProps) {
   const options = scaleOptions ?? [1, 2, 3, 4, 5];
@@ -58,12 +62,12 @@ export function RatingMatrixQuestion({
   return (
     <div className="rating-matrix">
       <div className="rating-scale-labels">
-        <span>{scaleOptions ? minLabel : `1 = ${minLabel}`}</span>
-        <span>{scaleOptions ? maxLabel : `5 = ${maxLabel}`}</span>
+        <span>{scaleOptions ? getLabel(minLabel) : `1 = ${getLabel(minLabel)}`}</span>
+        <span>{scaleOptions ? getLabel(maxLabel) : `5 = ${getLabel(maxLabel)}`}</span>
       </div>
       {groupedItems.map((group) => (
         <div className="rating-group" key={group.label || "rating-items"}>
-          {group.label ? <h3>{group.label}</h3> : null}
+          {group.label ? <h3>{getLabel(group.label)}</h3> : null}
           <div className="rating-group-rows">
             {group.options.map((item) => (
               <RatingRow
@@ -72,6 +76,7 @@ export function RatingMatrixQuestion({
                 options={options}
                 value={value}
                 hasTextOptions={Boolean(scaleOptions)}
+                getLabel={getLabel}
                 onChange={onChange}
               />
             ))}

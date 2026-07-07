@@ -7,6 +7,8 @@ type SelectQuestionProps = {
   label?: string;
   placeholder?: string;
   value?: string;
+  getOptionLabel?: (option: string) => string;
+  getGroupLabel?: (label: string) => string;
   onChange: (value: string) => void;
 };
 
@@ -17,6 +19,8 @@ export function SelectQuestion({
   label = "Select an answer",
   placeholder = "Select one",
   value = "",
+  getOptionLabel = (option) => option,
+  getGroupLabel = (groupLabel) => groupLabel,
   onChange,
 }: SelectQuestionProps) {
   return (
@@ -28,17 +32,17 @@ export function SelectQuestion({
         </option>
         {optionGroups?.length
           ? optionGroups.map((group) => (
-              <optgroup key={group.label} label={group.label}>
+              <optgroup key={group.label} label={getGroupLabel(group.label)}>
                 {group.options.map((option) => (
                   <option key={option} value={option}>
-                    {option}
+                    {getOptionLabel(option)}
                   </option>
                 ))}
               </optgroup>
             ))
           : options.map((option) => (
               <option key={option} value={option}>
-                {option}
+                {getOptionLabel(option)}
               </option>
             ))}
       </select>

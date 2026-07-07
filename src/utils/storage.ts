@@ -42,3 +42,7 @@ export function restoreResponse(responseId: string) {
     }),
   );
 }
+
+export function clearResponses() {
+  updateResponses([]);
+}

@@ -13,10 +13,10 @@ import {
   formatTime,
   getMostCommonAnswer,
 } from "../utils/results";
-import { getResponses, restoreResponse, softDeleteResponse } from "../utils/storage";
+import { type Language, useLanguage } from "../utils/language";
+import { clearResponses, getResponses, restoreResponse, softDeleteResponse } from "../utils/storage";
 
 const RESULTS_PASSWORD = "Thaipass2026";
-const RESULTS_AUTH_KEY = "thaipass-results-authenticated";
 
 const responseDetailFields = [
   { label: "Nationality", questionId: "nationality" },
@@ -112,7 +112,17 @@ function getMatrixPercentages(question: Question, responses: SurveyResponse[]) {
   }));
 }
 
-function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
+function PasswordGate({
+  language,
+  onLanguageChange,
+  t,
+  onAuthenticated,
+}: {
+  language: Language;
+  onLanguageChange: (language: Language) => void;
+  t: (text: string | undefined) => string;
+  onAuthenticated: () => void;
+}) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -124,7 +134,6 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 
     window.setTimeout(() => {
       if (password.trim() === RESULTS_PASSWORD) {
-        sessionStorage.setItem(RESULTS_AUTH_KEY, "true");
         onAuthenticated();
         return;
       }
@@ -139,14 +148,16 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
       eyebrow="Internal review"
       title="Survey Results"
       description="Concept Validation Survey"
+      language={language}
+      onLanguageChange={onLanguageChange}
     >
       <section className="password-card">
-        <h2>Survey Results</h2>
-        <p>Survey results are available for internal review only.</p>
+        <h2>{t("Survey Results")}</h2>
+        <p>{t("Survey results are available for internal review only.")}</p>
         {/* Replace this client-side gate with backend authentication before production. */}
         <form className="password-form" onSubmit={handleSubmit}>
           <label>
-            <span>Enter password</span>
+            <span>{t("Enter password")}</span>
             <input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -154,15 +165,15 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
                 setPassword(event.target.value);
                 setError("");
               }}
-              placeholder="Enter password"
+              placeholder={t("Enter password")}
             />
           </label>
           <button className="password-toggle" type="button" onClick={() => setShowPassword((current) => !current)}>
-            {showPassword ? "Hide password" : "Show password"}
+            {showPassword ? t("Hide password") : t("Show password")}
           </button>
-          {error ? <p className="field-error">{error}</p> : null}
+          {error ? <p className="field-error">{t(error)}</p> : null}
           <button className="primary-button" type="submit" disabled={isLoading}>
-            {isLoading ? "Checking password..." : "View results"}
+            {isLoading ? t("Checking password...") : t("View results")}
           </button>
         </form>
       </section>
@@ -171,12 +182,14 @@ function PasswordGate({ onAuthenticated }: { onAuthenticated: () => void }) {
 }
 
 export function ResultsPage() {
+  const { language, setLanguage, t } = useLanguage();
   // This client-side password gate is only for internal review. Replace with backend authentication before production.
-  const [isAuthenticated, setIsAuthenticated] = useState(() => sessionStorage.getItem(RESULTS_AUTH_KEY) === "true");
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [responses, setResponses] = useState<SurveyResponse[]>(() => getResponses());
   const [activeView, setActiveView] = useState<"summary" | "individual">("summary");
   const [selectedNationality, setSelectedNationality] = useState("all");
   const [selectedResponseId, setSelectedResponseId] = useState<string | undefined>();
+  const [isClearConfirmOpen, setIsClearConfirmOpen] = useState(false);
 
   useEffect(() => {
     function syncResponses() {
@@ -224,8 +237,22 @@ export function ResultsPage() {
   const customerSupportFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Customer support contact");
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
 
+  function handleClearResponses() {
+    clearResponses();
+    setSelectedResponseId(undefined);
+    setSelectedNationality("all");
+    setIsClearConfirmOpen(false);
+  }
+
   if (!isAuthenticated) {
-    return <PasswordGate onAuthenticated={() => setIsAuthenticated(true)} />;
+    return (
+      <PasswordGate
+        language={language}
+        onLanguageChange={setLanguage}
+        t={t}
+        onAuthenticated={() => setIsAuthenticated(true)}
+      />
+    );
   }
 
   return (
@@ -233,10 +260,15 @@ export function ResultsPage() {
       eyebrow="Admin dashboard"
       title="ThaiPass Survey Results"
       description="Concept Validation Survey"
+      language={language}
+      onLanguageChange={setLanguage}
       actions={
         <div className="dashboard-actions">
+          <button className="clear-results-button" type="button" onClick={() => setIsClearConfirmOpen(true)} disabled={!responses.length}>
+            {t("Clear results")}
+          </button>
           <button className="secondary-button" type="button" onClick={() => exportToPDF(activeResponses)} disabled={!activeResponses.length}>
-            Export PDF
+            {t("Export PDF")}
           </button>
         </div>
       }
@@ -478,6 +510,22 @@ export function ResultsPage() {
           )}
         </>
       )}
+      {isClearConfirmOpen ? (
+        <div className="modal-backdrop" role="presentation">
+          <section className="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="clear-results-title">
+            <h2 id="clear-results-title">{t("Clear all results?")}</h2>
+            <p>{t("This will permanently remove all survey responses from this browser, including soft-deleted responses.")}</p>
+            <div className="confirm-modal-actions">
+              <button className="secondary-button" type="button" onClick={() => setIsClearConfirmOpen(false)}>
+                {t("Cancel")}
+              </button>
+              <button className="danger-button" type="button" onClick={handleClearResponses}>
+                {t("Clear results")}
+              </button>
+            </div>
+          </section>
+        </div>
+      ) : null}
     </SurveyLayout>
   );
 }

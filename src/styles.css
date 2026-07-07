@@ -61,6 +61,8 @@ a {
 
 .brand,
 .topnav,
+.topbar-actions,
+.language-switch,
 .hero-actions,
 .dashboard-actions {
   display: flex;
@@ -82,6 +84,11 @@ a {
   gap: 8px;
 }
 
+.topbar-actions {
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .topnav a {
   border-radius: 999px;
   color: var(--muted);
@@ -93,6 +100,31 @@ a {
 .topnav a:hover {
   background: var(--soft-red);
   color: var(--thai-red);
+}
+
+.language-switch {
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--soft);
+}
+
+.language-switch button {
+  min-height: 32px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 10px;
+  color: var(--muted);
+  background: transparent;
+  font-size: 0.84rem;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.language-switch button.is-active {
+  color: var(--white);
+  background: var(--thai-red);
 }
 
 main {
@@ -679,6 +711,8 @@ main {
 
 .primary-button,
 .secondary-button,
+.danger-button,
+.clear-results-button,
 .ghost-button {
   display: inline-flex;
   align-items: center;
@@ -707,6 +741,18 @@ main {
   background: var(--soft-red);
 }
 
+.danger-button,
+.clear-results-button {
+  border: 1px solid rgba(215, 25, 32, 0.3);
+  color: var(--white);
+  background: var(--thai-red);
+}
+
+.danger-button:hover,
+.clear-results-button:hover {
+  background: var(--thai-red-dark);
+}
+
 .ghost-button {
   border: 1px solid var(--line);
   color: var(--muted);
@@ -715,9 +761,48 @@ main {
 
 .primary-button:disabled,
 .secondary-button:disabled,
+.danger-button:disabled,
+.clear-results-button:disabled,
 .ghost-button:disabled {
   opacity: 0.48;
   cursor: not-allowed;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(23, 24, 28, 0.36);
+}
+
+.confirm-modal {
+  width: min(100%, 460px);
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  box-shadow: 0 24px 70px rgba(23, 24, 28, 0.24);
+}
+
+.confirm-modal h2 {
+  margin: 0;
+  font-size: 1.35rem;
+}
+
+.confirm-modal p {
+  margin: 10px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.confirm-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
 }
 
 .thank-you-card,
@@ -1097,6 +1182,14 @@ main {
   opacity: 0.72;
 }
 
+.response-list-item.is-deleted span,
+.response-list-item.is-deleted strong,
+.response-list-item.is-deleted small,
+.response-list-item.is-deleted em {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+}
+
 .response-list-item span,
 .response-list-item small,
 .response-list-item em {
@@ -1122,6 +1215,13 @@ main {
 
 .response-detail.is-deleted {
   background: #fafafa;
+}
+
+.response-detail.is-deleted h3,
+.response-detail.is-deleted .response-detail-grid dt,
+.response-detail.is-deleted .response-detail-grid dd {
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
 }
 
 .response-detail-header {
@@ -1338,9 +1438,23 @@ main {
     width: 100%;
   }
 
+  .topbar-actions {
+    align-items: stretch;
+    flex-direction: column;
+    width: 100%;
+  }
+
   .topnav a {
     flex: 1;
     text-align: center;
+  }
+
+  .language-switch {
+    width: 100%;
+  }
+
+  .language-switch button {
+    flex: 1;
   }
 
   main {

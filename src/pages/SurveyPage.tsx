@@ -8,6 +8,7 @@ import { SingleChoiceQuestion } from "../components/SingleChoiceQuestion";
 import { SurveyLayout } from "../components/SurveyLayout";
 import { TextQuestion } from "../components/TextQuestion";
 import { surveyQuestions } from "../data/surveyQuestions";
+import { useLanguage } from "../utils/language";
 import { saveResponse } from "../utils/storage";
 import type { OtherAnswers, SurveyAnswers, SurveyResponse } from "../types";
 
@@ -58,6 +59,7 @@ function questionErrorMessage(questionId: string) {
 }
 
 export function SurveyPage() {
+  const { language, setLanguage, t } = useLanguage();
   const [answers, setAnswers] = useState<SurveyAnswers>({});
   const [otherAnswers, setOtherAnswers] = useState<OtherAnswers>({});
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -151,14 +153,16 @@ export function SurveyPage() {
         eyebrow="Research survey"
         title="Thank you for your feedback."
         description="Your response has been submitted successfully."
-        actions={<a className="secondary-button" href="/results">View results</a>}
+        language={language}
+        onLanguageChange={setLanguage}
+        actions={<a className="secondary-button" href="/results">{t("View results")}</a>}
       >
         <section className="thank-you-card">
-          <h2>Your response has been submitted successfully.</h2>
+          <h2>{t("Your response has been submitted successfully.")}</h2>
           <p>
-            Your answers will help us understand whether ThaiPass is useful before the final product is designed.
+            {t("Your answers will help us understand whether ThaiPass is useful before the final product is designed.")}
           </p>
-          <a className="primary-button" href="/survey">Submit another response</a>
+          <a className="primary-button" href="/survey">{t("Submit another response")}</a>
         </section>
       </SurveyLayout>
     );
@@ -169,13 +173,15 @@ export function SurveyPage() {
       eyebrow="Concept validation"
       title="ThaiPass Survey"
       description="Help us validate ThaiPass, a Thailand Travel Assistant concept for international travelers. This survey takes around 2-3 minutes and does not require personal data."
+      language={language}
+      onLanguageChange={setLanguage}
     >
       <form className="survey-form" onSubmit={handleSubmit} noValidate>
         <section className="progress-card" aria-label={`Survey progress ${Math.round(((currentQuestionIndex + 1) / surveyQuestions.length) * 100)}%`}>
           <div className="progress-copy">
-            <span>Step {currentQuestionIndex + 1} of {surveyQuestions.length}</span>
+            <span>{t("Step")} {currentQuestionIndex + 1} {t("of")} {surveyQuestions.length}</span>
             <strong>
-              {answeredCount} of {surveyQuestions.length} answered
+              {answeredCount} {t("of")} {surveyQuestions.length} {t("answered")}
             </strong>
           </div>
           <div className="progress-track">
@@ -204,10 +210,10 @@ export function SurveyPage() {
         <QuestionCard
           key={currentQuestion.id}
           number={currentQuestionIndex + 1}
-          title={currentQuestion.title}
-          description={currentQuestion.description}
-          instruction={currentQuestion.type === "multiple" ? currentQuestion.instruction : undefined}
-          error={errors[currentQuestion.id]}
+          title={t(currentQuestion.title)}
+          description={currentQuestion.description ? t(currentQuestion.description) : undefined}
+          instruction={currentQuestion.type === "multiple" ? t(currentQuestion.instruction) : undefined}
+          error={errors[currentQuestion.id] ? t(errors[currentQuestion.id]) : undefined}
           showConceptMockup={currentQuestion.showConceptMockup}
         >
           {currentQuestion.type === "single" ? (
@@ -217,9 +223,11 @@ export function SurveyPage() {
                   name={currentQuestion.id}
                   options={currentQuestion.options}
                   optionGroups={currentQuestion.optionGroups}
-                  label={currentQuestion.fieldLabel}
-                  placeholder={currentQuestion.placeholder}
+                  label={currentQuestion.fieldLabel ? t(currentQuestion.fieldLabel) : undefined}
+                  placeholder={currentQuestion.placeholder ? t(currentQuestion.placeholder) : undefined}
                   value={answers[currentQuestion.id] as string | undefined}
+                  getOptionLabel={t}
+                  getGroupLabel={t}
                   onChange={(value) => updateAnswer(currentQuestion.id, value)}
                 />
               ) : (
@@ -227,17 +235,18 @@ export function SurveyPage() {
                   name={currentQuestion.id}
                   options={currentQuestion.options}
                   value={answers[currentQuestion.id] as string | undefined}
+                  getOptionLabel={t}
                   onChange={(value) => updateAnswer(currentQuestion.id, value)}
                 />
               )}
               {currentQuestion.allowOther && answers[currentQuestion.id] === "Other" ? (
                 <label className="other-field">
-                  <span>Please tell us more</span>
+                  <span>{t("Please tell us more")}</span>
                   <input
                     type="text"
                     value={otherAnswers[currentQuestion.id] ?? ""}
                     onChange={(event) => updateOtherAnswer(currentQuestion.id, event.target.value)}
-                    placeholder="Type your answer"
+                    placeholder={t("Type your answer")}
                   />
                 </label>
               ) : null}
@@ -251,6 +260,9 @@ export function SurveyPage() {
               value={(answers[currentQuestion.id] as string[] | undefined) ?? []}
               maxSelections={currentQuestion.maxSelections}
               otherValue={otherAnswers[currentQuestion.id]}
+              getOptionLabel={t}
+              otherLabel={t("Please tell us more")}
+              otherPlaceholder={t("Type your answer")}
               onChange={(value) => updateAnswer(currentQuestion.id, value)}
               onOtherChange={
                 currentQuestion.allowOther ? (value) => updateOtherAnswer(currentQuestion.id, value) : undefined
@@ -265,6 +277,7 @@ export function SurveyPage() {
               maxLabel={currentQuestion.scaleMaxLabel}
               scaleOptions={currentQuestion.scaleOptions}
               itemGroups={currentQuestion.itemGroups}
+              getLabel={t}
               value={(answers[currentQuestion.id] as Record<string, string | number> | undefined) ?? {}}
               onChange={(item, rating) => {
                 const current = (answers[currentQuestion.id] as Record<string, string | number> | undefined) ?? {};
@@ -296,15 +309,15 @@ export function SurveyPage() {
         <div className="step-panel step-panel-actions-only">
           <div className="step-actions">
             <button className="ghost-button" type="button" onClick={handleBack} disabled={isFirstQuestion}>
-              Back
+              {t("Back")}
             </button>
             {isLastQuestion ? (
               <button className="primary-button" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Submitting your response..." : "Submit response"}
+                {isSubmitting ? t("Submitting your response...") : t("Submit response")}
               </button>
             ) : (
               <button className="primary-button" type="button" onClick={handleNext}>
-                Continue
+                {t("Continue")}
               </button>
             )}
           </div>

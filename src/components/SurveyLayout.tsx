@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import type { Language } from "../utils/language";
+import { languageLabels, translate } from "../utils/language";
 
 type SurveyLayoutProps = {
   children: ReactNode;
@@ -6,28 +8,56 @@ type SurveyLayoutProps = {
   title: string;
   description?: string;
   actions?: ReactNode;
+  language?: Language;
+  onLanguageChange?: (language: Language) => void;
 };
 
-export function SurveyLayout({ children, eyebrow, title, description, actions }: SurveyLayoutProps) {
+export function SurveyLayout({
+  children,
+  eyebrow,
+  title,
+  description,
+  actions,
+  language = "en",
+  onLanguageChange,
+}: SurveyLayoutProps) {
+  const t = (text: string | undefined) => translate(text, language);
+
   return (
     <div className="app-shell">
       <header className="topbar">
         <a className="brand" href="/survey" aria-label="ThaiPass survey home">
           <img src="/ThaiPass_Logo.svg" alt="ThaiPass" />
         </a>
-        <nav className="topnav" aria-label="Primary">
-          <a href="/survey">Survey</a>
-          <a href="/results">Results</a>
-        </nav>
+        <div className="topbar-actions">
+          <nav className="topnav" aria-label="Primary">
+            <a href="/survey">{t("Survey")}</a>
+            <a href="/results">{t("Results")}</a>
+          </nav>
+          {onLanguageChange ? (
+            <div className="language-switch" aria-label="Language">
+              {(["en", "zh"] as Language[]).map((item) => (
+                <button
+                  className={language === item ? "is-active" : ""}
+                  key={item}
+                  type="button"
+                  onClick={() => onLanguageChange(item)}
+                >
+                  {languageLabels[item]}
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
       </header>
 
       <main>
         <section className="page-hero">
-          {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+          {eyebrow ? <p className="eyebrow">{t(eyebrow)}</p> : null}
           <div className="hero-copy">
             <div>
-              <h1>{title}</h1>
-              {description ? <p>{description}</p> : null}
+              <h1>{t(title)}</h1>
+              {description ? <p>{t(description)}</p> : null}
             </div>
             {actions ? <div className="hero-actions">{actions}</div> : null}
           </div>
