@@ -22,6 +22,7 @@ const responseDetailFields = [
   { label: "Nationality", questionId: "nationality" },
   { label: "Thailand travel status", questionId: "visitStatus" },
   { label: "Preparation area ratings", questionId: "preparationAreas" },
+  { label: "Advance travel services", questionId: "advanceTravelServices" },
   { label: "Decision factors", questionId: "decisionFactors" },
 ];
 
@@ -219,8 +220,8 @@ export function ResultsPage() {
     "No, but I am planning to visit",
     "No, but I am interested in visiting",
   ]);
-  const verifiedBadgeFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Official partner / verified badge");
-  const customerSupportFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Customer support");
+  const verifiedBadgeFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Official partner / verified provider badge");
+  const customerSupportFactor = calculateMultipleAnswerShare(activeResponses, "decisionFactors", "Customer support contact");
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
 
   if (!isAuthenticated) {
