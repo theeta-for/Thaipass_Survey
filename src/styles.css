@@ -53,7 +53,7 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  padding: 16px clamp(16px, 4vw, 56px);
+  padding: 10px clamp(16px, 4vw, 56px);
   background: rgba(255, 255, 255, 0.92);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(14px);
@@ -68,13 +68,13 @@ a {
 }
 
 .brand {
-  width: 120px;
-  min-height: 34px;
+  width: 104px;
+  min-height: 30px;
 }
 
 .brand img {
   display: block;
-  width: 120px;
+  width: 104px;
   height: auto;
 }
 
@@ -87,7 +87,7 @@ a {
   color: var(--muted);
   font-size: 0.93rem;
   font-weight: 700;
-  padding: 8px 12px;
+  padding: 6px 10px;
 }
 
 .topnav a:hover {
@@ -96,17 +96,17 @@ a {
 }
 
 main {
-  padding: 0 clamp(16px, 4vw, 56px) 56px;
+  padding: 0 clamp(16px, 4vw, 56px) 28px;
 }
 
 .page-hero {
   max-width: 1120px;
   margin: 0 auto;
-  padding: clamp(28px, 6vw, 64px) 0 24px;
+  padding: clamp(16px, 3vw, 28px) 0 12px;
 }
 
 .eyebrow {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   color: var(--thai-red);
   font-size: 1rem;
   font-weight: 400;
@@ -125,17 +125,17 @@ main {
   max-width: 760px;
   margin: 0;
   font-family: "Noto Serif", Georgia, serif;
-  font-size: clamp(2rem, 5vw, 4rem);
+  font-size: clamp(2rem, 4vw, 3rem);
   font-weight: 800;
   line-height: 1.02;
 }
 
 .hero-copy p {
   max-width: 670px;
-  margin: 14px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
-  font-size: clamp(1rem, 2.2vw, 1.18rem);
-  line-height: 1.6;
+  font-size: clamp(0.96rem, 1.5vw, 1.05rem);
+  line-height: 1.45;
 }
 
 .hero-actions,
@@ -156,7 +156,7 @@ main {
 
 .survey-form {
   display: grid;
-  gap: 18px;
+  gap: 10px;
 }
 
 .intro-card,
@@ -200,16 +200,16 @@ main {
 
 .progress-card {
   position: sticky;
-  top: 67px;
+  top: 55px;
   z-index: 4;
-  padding: 16px;
+  padding: 10px 14px;
 }
 
 .progress-copy {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
   color: var(--muted);
   font-size: 0.9rem;
 }
@@ -221,7 +221,7 @@ main {
 .progress-track,
 .bar-track {
   overflow: hidden;
-  height: 10px;
+  height: 8px;
   border-radius: 999px;
   background: var(--soft);
 }
@@ -236,8 +236,8 @@ main {
 }
 
 .question-card {
-  padding: clamp(18px, 4vw, 28px);
-  min-height: 380px;
+  padding: clamp(16px, 2.5vw, 22px);
+  min-height: 0;
 }
 
 .question-card.has-error {
@@ -248,14 +248,14 @@ main {
 .question-heading {
   display: flex;
   gap: 14px;
-  margin-bottom: 18px;
+  margin-bottom: 12px;
 }
 
 .concept-statement {
   display: grid;
-  gap: 12px;
-  margin: 0 0 18px;
-  padding: 16px;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 12px 14px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--soft);
@@ -265,7 +265,7 @@ main {
 .concept-statement p {
   margin: 0;
   color: var(--muted);
-  line-height: 1.6;
+  line-height: 1.45;
 }
 
 .concept-statement ul {
@@ -364,7 +364,7 @@ main {
 }
 
 .question-heading h2 {
-  font-size: clamp(1.45rem, 3.8vw, 2.25rem);
+  font-size: clamp(1.35rem, 2.6vw, 1.95rem);
   font-weight: 900;
   letter-spacing: 0;
 }
@@ -383,7 +383,7 @@ main {
 .option-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
+  gap: 9px;
 }
 
 .choice-option {
@@ -391,8 +391,8 @@ main {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-  min-height: 52px;
-  padding: 14px;
+  min-height: 46px;
+  padding: 11px 12px;
   border: 1px solid var(--line);
   border-radius: 14px;
   background: var(--soft);
@@ -480,7 +480,7 @@ main {
 
 .select-field select {
   width: 100%;
-  min-height: 54px;
+  min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 0 56px 0 16px;
@@ -628,7 +628,7 @@ main {
 .question-tabs {
   display: flex;
   justify-content: center;
-  gap: clamp(4px, 0.8vw, 10px);
+  gap: clamp(4px, 0.55vw, 8px);
   max-width: 1120px;
   margin: 0 auto;
   overflow: visible;
@@ -638,17 +638,17 @@ main {
 .question-tab {
   display: grid;
   flex: 1 1 0;
-  width: clamp(42px, 5.2vw, 64px);
+  width: clamp(34px, 4vw, 48px);
   min-width: 0;
-  max-width: 64px;
+  max-width: 48px;
   aspect-ratio: 1;
   min-height: 0;
   place-items: center;
   border: 1px solid var(--line);
-  border-radius: clamp(14px, 1.6vw, 20px);
+  border-radius: clamp(12px, 1.2vw, 16px);
   color: var(--muted);
   background: var(--white);
-  font-size: clamp(1rem, 1.6vw, 1.45rem);
+  font-size: clamp(0.95rem, 1.2vw, 1.15rem);
   font-weight: 900;
   cursor: pointer;
 }
@@ -674,7 +674,7 @@ main {
 .step-actions {
   display: flex;
   flex: 0 0 auto;
-  gap: 10px;
+  gap: 8px;
 }
 
 .step-panel-actions-only {
@@ -691,10 +691,10 @@ main {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 46px;
+  min-height: 42px;
   border: 0;
   border-radius: 999px;
-  padding: 0 20px;
+  padding: 0 18px;
   font-weight: 800;
   cursor: pointer;
 }
@@ -1281,7 +1281,7 @@ main {
   }
 
   .progress-card {
-    top: 66px;
+    top: 51px;
   }
 
   .step-actions {
@@ -1337,11 +1337,16 @@ main {
   }
 
   main {
-    padding-inline: 14px;
+    padding-inline: 12px;
+  }
+
+  .page-hero {
+    padding-top: 12px;
   }
 
   .question-heading {
     flex-direction: column;
+    gap: 8px;
   }
 
   .rating-options {
@@ -1365,7 +1370,7 @@ main {
   }
 
   .progress-card {
-    top: 116px;
+    top: 104px;
   }
 
   .primary-button,
@@ -1376,7 +1381,7 @@ main {
 
   .brand,
   .brand img {
-    width: 112px;
+    width: 100px;
   }
 
   .question-tabs {
@@ -1386,7 +1391,7 @@ main {
   }
 
   .question-tab {
-    flex: 0 0 42px;
+    flex: 0 0 36px;
   }
 
   .step-actions {
