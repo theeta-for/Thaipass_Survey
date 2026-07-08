@@ -63,6 +63,7 @@ export function SurveyPage() {
   const [answers, setAnswers] = useState<SurveyAnswers>({});
   const [otherAnswers, setOtherAnswers] = useState<OtherAnswers>({});
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [attemptedQuestions, setAttemptedQuestions] = useState<Record<string, boolean>>({});
   const [submitError, setSubmitError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -80,6 +81,11 @@ export function SurveyPage() {
   function updateAnswer(questionId: string, value: SurveyAnswers[string]) {
     setAnswers((current) => ({ ...current, [questionId]: value }));
     setSubmitError("");
+    setAttemptedQuestions((current) => {
+      const next = { ...current };
+      delete next[questionId];
+      return next;
+    });
     setErrors((current) => {
       const next = { ...current };
       delete next[questionId];
@@ -92,13 +98,22 @@ export function SurveyPage() {
   }
 
   function goToQuestion(index: number) {
+    const targetQuestion = surveyQuestions[index];
     setErrors({});
+    if (targetQuestion) {
+      setAttemptedQuestions((current) => {
+        const next = { ...current };
+        delete next[targetQuestion.id];
+        return next;
+      });
+    }
     setCurrentQuestionIndex(index);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function handleNext() {
     if (!currentQuestionAnswered) {
+      setAttemptedQuestions((current) => ({ ...current, [currentQuestion.id]: true }));
       setErrors((current) => ({
         ...current,
         [currentQuestion.id]: questionErrorMessage(currentQuestion.id),
@@ -122,6 +137,10 @@ export function SurveyPage() {
     if (Object.keys(validationErrors).length > 0) {
       const firstInvalidIndex = surveyQuestions.findIndex((question) => validationErrors[question.id]);
       if (firstInvalidIndex >= 0) {
+        setAttemptedQuestions((current) => ({
+          ...current,
+          [surveyQuestions[firstInvalidIndex].id]: true,
+        }));
         setCurrentQuestionIndex(firstInvalidIndex);
       }
       return;
@@ -213,7 +232,7 @@ export function SurveyPage() {
           title={t(currentQuestion.title)}
           description={currentQuestion.description ? t(currentQuestion.description) : undefined}
           instruction={currentQuestion.type === "multiple" ? t(currentQuestion.instruction) : undefined}
-          error={errors[currentQuestion.id] ? t(errors[currentQuestion.id]) : undefined}
+          error={errors[currentQuestion.id] && attemptedQuestions[currentQuestion.id] ? t(errors[currentQuestion.id]) : undefined}
           showConceptMockup={currentQuestion.showConceptMockup}
         >
           {currentQuestion.type === "single" ? (
