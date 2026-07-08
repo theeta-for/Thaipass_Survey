@@ -146,7 +146,7 @@ main {
 
 .hero-copy {
   display: flex;
-  align-items: end;
+  align-items: center;
   justify-content: space-between;
   gap: 24px;
 }
