@@ -262,8 +262,17 @@ export function ResultsPage() {
   const lastUpdated = activeResponses[0] ? formatDateTime(activeResponses[0].timestamp) : "No active responses yet";
 
   async function refreshResponses() {
-    const nextResponses = await loadResponses();
-    setResponses(nextResponses);
+    setIsLoadingResponses(true);
+    setResponseError("");
+
+    try {
+      const nextResponses = await loadResponses();
+      setResponses(nextResponses);
+    } catch {
+      setResponseError("Could not load shared responses. Showing saved responses from this browser.");
+    } finally {
+      setIsLoadingResponses(false);
+    }
   }
 
   async function handleClearResponses() {
@@ -316,6 +325,9 @@ export function ResultsPage() {
       onLanguageChange={setLanguage}
       actions={
         <div className="dashboard-actions">
+          <button className="secondary-button" type="button" onClick={refreshResponses} disabled={isLoadingResponses}>
+            {isLoadingResponses ? "Refreshing..." : "Refresh"}
+          </button>
           <button className="clear-results-button" type="button" onClick={() => setIsClearConfirmOpen(true)} disabled={!responses.length}>
             {t("Clear results")}
           </button>
