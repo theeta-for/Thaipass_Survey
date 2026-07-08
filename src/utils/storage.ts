@@ -42,18 +42,22 @@ async function requestSharedStorage<T>(path: string, init?: RequestInit) {
     throw new Error("Shared storage is not configured.");
   }
 
+  const headers = new Headers(init?.headers);
+  headers.set("apikey", SUPABASE_ANON_KEY);
+  headers.set("Content-Type", "application/json");
+
+  if (SUPABASE_ANON_KEY.startsWith("eyJ")) {
+    headers.set("Authorization", `Bearer ${SUPABASE_ANON_KEY}`);
+  }
+
   const response = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
     ...init,
-    headers: {
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      "Content-Type": "application/json",
-      ...init?.headers,
-    },
+    headers,
   });
 
   if (!response.ok) {
-    throw new Error(`Shared storage request failed: ${response.status}`);
+    const detail = await response.text();
+    throw new Error(`Shared storage request failed: ${response.status} ${detail}`);
   }
 
   if (response.status === 204) {
