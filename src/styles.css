@@ -721,6 +721,17 @@ main {
   padding: 0 20px;
   font-weight: 800;
   cursor: pointer;
+  gap: 8px;
+}
+
+.button-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.1em;
+  height: 1.1em;
+  font-size: 1.05em;
+  line-height: 1;
 }
 
 .primary-button {

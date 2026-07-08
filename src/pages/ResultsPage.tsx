@@ -326,13 +326,16 @@ export function ResultsPage() {
       actions={
         <div className="dashboard-actions">
           <button className="secondary-button" type="button" onClick={refreshResponses} disabled={isLoadingResponses}>
+            <span className="button-icon" aria-hidden="true">↻</span>
             {isLoadingResponses ? "Refreshing..." : "Refresh"}
           </button>
-          <button className="clear-results-button" type="button" onClick={() => setIsClearConfirmOpen(true)} disabled={!responses.length}>
-            {t("Clear results")}
-          </button>
           <button className="secondary-button" type="button" onClick={() => exportToPDF(activeResponses)} disabled={!activeResponses.length}>
+            <span className="button-icon" aria-hidden="true">↓</span>
             {t("Export PDF")}
+          </button>
+          <button className="clear-results-button" type="button" onClick={() => setIsClearConfirmOpen(true)} disabled={!responses.length}>
+            <span className="button-icon" aria-hidden="true">×</span>
+            {t("Clear results")}
           </button>
         </div>
       }
